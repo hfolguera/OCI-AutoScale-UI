@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} OCI-AutoScale Resources {% endblock %}</h1>
+
+    <div class="row">
+        <div class="col-md-12">
+            <a href="/" class="btn btn-secondary float-end" role="button">Refresh</a>
+            <a href="/addResource" class="btn btn-primary float-end" role="button">Add Resource</a>
+        </div>
+    </div>
+    <div class="row">
+        <table class="table table-hover table-responsive">
+            <thead>
+                <tr>
+                    <th class="align-middle" scope="col">Display Name</th>
+                    <th class="align-middle" scope="col">Resource Type</th>
+                    <th class="align-middle" scope="col">Compartment</th>
+                    <th class="align-middle" scope="col">Schedule</th>
+                    <th class="align-middle" scope="col">Status</th>
+                    <th class="align-middle" scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for resource in resources %}
+                <tr>
+                    <th class="align-middle" ><span class="d-inline-block text-truncate" style="min-width: 200px;">{{ resource['display_name'] }}</span></th>
+                    <td class="align-middle" >{{ resource['resource_type'] }}</td>
+                    <td class="align-middle" ><span class="d-inline-block text-truncate" style="max-width: 150px;">{{ resource['compartment_id'] }}</span></td>
+                    <td class="align-middle" ><span class="d-inline-block text-truncate" style="min-width: 300px;">
+                            {% for key in resource['defined_tags']['Autoscale'].keys() %}
+                                <span class="badge badge-primary">{{ key }}</span>
+                                <span>
+                                    <div class="progress">
+                                        {% for value in resource['defined_tags']['Autoscale']['AnyDay'] %}
+                                            {% if value != ',' %}
+                                                {% if value=='*' %}
+                                                    {% set background='bg-warning' %}
+                                                {% elif value=='0' %}
+                                                    {% set background='bg-danger' %}
+                                                {% else %}
+                                                    {% set background='bg-success' %}
+                                                {% endif %}
+                                                <div class="progress-bar {{ background }}" role="progressbar" style="width: 4.16%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">{{ value }}</div>
+                                            {% endif %}
+                                        {% endfor %}
+                                      </div>
+                                </span><br>
+                            {% endfor %}
+                        </span>
+                    </td>
+                    <td class="align-middle" >{{ resource['lifecycle_state'] }}</td>
+                    <td class="align-middle" >{{ resource }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

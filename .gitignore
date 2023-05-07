@@ -1,0 +1,18 @@
+# Ignore temporary files
+**.swp
+**.bck
+**.old
+**.tmp
+.DS_Store
+
+# Ignore Python files
+__pycache__
+
+# Ignore large files
+*.zip
+*.tar.gz
+
+# Ignore credentials
+.ssh
+ssh
+**credentials
