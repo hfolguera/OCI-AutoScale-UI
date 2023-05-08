@@ -1,0 +1,3 @@
+oci
+flask
+flask-paginate
