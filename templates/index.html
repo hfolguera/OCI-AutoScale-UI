@@ -1,16 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} OCI-AutoScale Resources {% endblock %}</h1>
+    <h1>{% block title %} Resource List {% endblock %}</h1>
 
     <div class="row">
         <div class="col-md-12">
-            <a href="/" class="btn btn-secondary float-end" role="button">Refresh</a>
-            <a href="/addResource" class="btn btn-primary float-end" role="button">Add Resource</a>
+            <a href="/" class="btn btn-secondary float-end me-1" role="button">Refresh</a>
+            <a href="#" class="btn btn-secondary float-end me-1 dropdown-toggle" role="button" id="dropdownMenuExport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Export</a>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuExport">
+                <a class="dropdown-item" href="/exportCSV">CSV</a>
+                <a class="dropdown-item" href="/exportJSON">JSON</a>
+            </div>
+            <a href="/addResource" class="btn btn-primary float-end me-1" role="button">Add Resource</a>
         </div>
     </div>
+    <br>
     <div class="row">
-        <table class="table table-hover table-responsive">
+        <table class="table table-hover table-bordered table-responsive text-center">
             <thead>
                 <tr>
                     <th class="align-middle" scope="col">Display Name</th>
@@ -24,36 +30,61 @@
             <tbody>
                 {% for resource in resources %}
                 <tr>
-                    <th class="align-middle" ><span class="d-inline-block text-truncate" style="min-width: 200px;">{{ resource['display_name'] }}</span></th>
+                    <th class="align-middle text-left" ><span class="d-inline-block text-truncate" style="min-width: 200px;">{{ resource['display_name'] }}   <i class="bi bi-clipboard"></i></span></th>
                     <td class="align-middle" >{{ resource['resource_type'] }}</td>
-                    <td class="align-middle" ><span class="d-inline-block text-truncate" style="max-width: 150px;">{{ resource['compartment_id'] }}</span></td>
-                    <td class="align-middle" ><span class="d-inline-block text-truncate" style="min-width: 300px;">
-                            {% for key in resource['defined_tags']['Autoscale'].keys() %}
-                                <span class="badge badge-primary">{{ key }}</span>
-                                <span>
-                                    <div class="progress">
-                                        {% for value in resource['defined_tags']['Autoscale']['AnyDay'] %}
-                                            {% if value != ',' %}
-                                                {% if value=='*' %}
-                                                    {% set background='bg-warning' %}
-                                                {% elif value=='0' %}
-                                                    {% set background='bg-danger' %}
-                                                {% else %}
-                                                    {% set background='bg-success' %}
-                                                {% endif %}
-                                                <div class="progress-bar {{ background }}" role="progressbar" style="width: 4.16%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">{{ value }}</div>
+                    <td class="align-middle" ><span class="d-inline-block text-truncate" style="max-width: 150px;">{{ resource['compartment_id'] }}</span><i class="bi bi-clipboard"></i></td>
+                    <td class="align-middle" ><span class="d-inline-block text-truncate" style="min-width: 700px;">
+                            {% for key in resource['defined_tags'][PredefinedTag].keys() %}
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                    <span class="input-group-text justify-content-center" style="width:100px; color:black" id="">{{ key }}</span>
+                                    </div>
+                                    {% for value in resource['defined_tags'][PredefinedTag][key] %}
+                                        {% if value != ',' %}
+                                            {% if value=='*' %}
+                                                {% set background='bg-warning' %}
+                                            {% elif value=='0' %}
+                                                {% set background='bg-light' %}
+                                            {% else %}
+                                                {% set background='bf-info' %}
                                             {% endif %}
-                                        {% endfor %}
-                                      </div>
-                                </span><br>
+                                            <label class="form-control justify-content-center {{ background }}" style="color:black" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">{{ value }}</label>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>  
                             {% endfor %}
-                        </span>
+                            </span>
                     </td>
-                    <td class="align-middle" >{{ resource['lifecycle_state'] }}</td>
-                    <td class="align-middle" >{{ resource }}</td>
+                    <td class="align-middle" >{{ resource['lifecycle_state']|upper }}</td>
+                    <td class="align-middle" ><i class="bi bi-play-fill"></i><i class="bi bi-stop-fill"></i><i class="bi bi-pencil-square"></i></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    <div class="row">
+        <form action="/" method="POST">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {{ 'disabled' if previous_page_token is none }}"><button class="page-link" id="page" name="page" value="{{ previous_page_token }}">Previous</button></li>
+                    <li class="page-item {{ 'disabled' if next_page_token is none }}"><button class="page-link" id="page" name="page" value="{{ next_page_token }}">Next</button></li>
+                    <li>
+                        <select class="form-control" id="per_page" name="per_page" onchange="this.form.submit()">
+                            <option value="5" {{ 'selected' if per_page == '5' }} >Show 5</option>
+                            <option value="10" {{ 'selected' if per_page == '10' }} >Show 10</option>
+                            <option value="20" {{ 'selected' if per_page == '20' }}>Show 20</option>
+                            <option value="50" {{ 'selected' if per_page == '50' }}>Show 50</option>
+                            <option value="100" {{ 'selected' if per_page == '100' }}>Show 100</option>
+                            <option value="All" {{ 'selected' if per_page == 'All' }}>Show All</option>
+                        </select>
+                    </li>
+                </ul>
+            </nav>
+    
+        </form>
+    </div>
+    {{ next_page_token }}
+    {{ previous_page_token }}
+    {{ per_page }}
+    
 {% endblock %}
