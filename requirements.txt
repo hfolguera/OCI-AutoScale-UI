@@ -1,3 +1,2 @@
 oci
 flask
-flask-paginate

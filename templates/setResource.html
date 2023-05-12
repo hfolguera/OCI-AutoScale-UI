@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} {{ Action }} Resource {% endblock %}</h1>
+
+    <!-- Get flash messages from previous execution-->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="post">
+        <div class="mb-3">
+            <label for="OCID" class="form-label">OCID</label>
+            <input type="text" class="form-control" id="OCID" name="OCID" placeholder="Resource OCID" aria-describedby="ocidHelp" value="{{ OCID }}">
+            <div id="ocidHelp" class="form-text">Enter an existing resource ocid.</div>
+        </div>
+
+        <label for="Schedule" class="form-label">Schedule</label>
+        {% if ScheduleTags %}
+            {% for ScheduleKey,Schedule in ScheduleTags.items() %}
+                <div class="input-group mb-3">
+                    <div class="container w-25">
+                        <select class="form-select w-100" id="ScheduleKey-{{ loop.index }}" name="ScheduleKey-{{ loop.index }}" value="{{ ScheduleKey }}">
+                            {% for key in ScheduleKeys %}
+                                <option {{ 'selected' if key == ScheduleKey }}>{{ key }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <input type="text" class="form-control" id="Schedule-{{ loop.index }}" name="Schedule-{{ loop.index }}" placeholder="Resource Schedule"  value="{{ Schedule }}">
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="input-group mb-3">
+                <div class="container w-25">
+                    <select class="form-select w-100" id="ScheduleKey-1" name="ScheduleKey-1" value="{{ ScheduleKey }}">
+                        {% for key in ScheduleKeys %}
+                            <option {{ 'selected' if key == ScheduleKey }}>{{ key }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <input type="text" class="form-control" id="Schedule-1" name="Schedule-1" placeholder="Resource Schedule"  value="{{ Schedule }}">
+            </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <input type="hidden" name="Action" value="Add"></input>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+
+    </form>
+
+{% endblock %}

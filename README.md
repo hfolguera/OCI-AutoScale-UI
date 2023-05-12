@@ -39,6 +39,7 @@ flask run --host 0.0.0.0
 - Login
 - Monitoring? Metrics?
 - Filter resources by instance_type, compartment, status...
+- App versioning
 
 ## Issues
 - Copy OCID

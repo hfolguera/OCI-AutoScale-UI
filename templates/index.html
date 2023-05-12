@@ -4,6 +4,17 @@
     <h1>{% block title %} Resource List {% endblock %}</h1>
 
     <div class="row">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    </div>
+    <div class="row">
         <div class="col-md-12">
             <a href="/" class="btn btn-secondary float-end me-1" role="button">Refresh</a>
             <a href="#" class="btn btn-secondary float-end me-1 dropdown-toggle" role="button" id="dropdownMenuExport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Export</a>
@@ -11,7 +22,7 @@
                 <a class="dropdown-item" href="/exportCSV">CSV</a>
                 <a class="dropdown-item" href="/exportJSON">JSON</a>
             </div>
-            <a href="/addResource" class="btn btn-primary float-end me-1" role="button">Add Resource</a>
+            <a href="/setResource" class="btn btn-primary float-end me-1" role="button">Add Resource</a>
         </div>
     </div>
     <br>
@@ -56,7 +67,18 @@
                             </span>
                     </td>
                     <td class="align-middle" >{{ resource['lifecycle_state']|upper }}</td>
-                    <td class="align-middle" ><i class="bi bi-play-fill"></i><i class="bi bi-stop-fill"></i><i class="bi bi-pencil-square"></i></td>
+                    <td class="align-middle" style="min-width: 175px;">
+                        <form method="post">
+                            <input type="hidden" name="OCID" value="{{ resource['identifier'] }}">
+                            <input type="hidden" name="ScheduleTags" value="{{ resource['defined_tags'][PredefinedTag] }}">
+                            <input type="hidden" name="Action" value="Update">
+
+                            <button type="submit" class="btn" formaction="startResource"><i class="bi bi-play-fill"></i></i></button>
+                            <button type="submit" class="btn" formaction="stopResource"><i class="bi bi-stop-fill"></i></i></button>
+                            <button type="submit" class="btn" formaction="setResource"><i class="bi bi-pencil-square"></i></button>
+                        </form>
+                        
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -83,8 +105,5 @@
     
         </form>
     </div>
-    {{ next_page_token }}
-    {{ previous_page_token }}
-    {{ per_page }}
     
 {% endblock %}

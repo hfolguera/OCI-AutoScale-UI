@@ -3,7 +3,6 @@ import time
 import argparse
 import json
 from flask import Flask, request, render_template, url_for, flash, redirect, Response
-from flask_paginate import Pagination, get_page_args
 
 # Arguments parser
 ## Parse command-line arguments
@@ -20,6 +19,8 @@ from flask_paginate import Pagination, get_page_args
 #PredefinedTag = args.tag
 PredefinedTag = 'Schedule'
 
+# Global variables
+ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 # Load OCI-Cli configuration from $HOME/.oci
 config = oci.config.from_file()
@@ -44,6 +45,7 @@ def getResources(page=None, per_page='5'):
     return response
 
 app = Flask(__name__)
+app.config.from_pyfile('config.py')
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
@@ -75,25 +77,87 @@ def index():
 
     return render_template('index.html', resources=resources.data, PredefinedTag=PredefinedTag, next_page_token=next_page_token, per_page=per_page, previous_page_token=previous_page_token)
 
-@app.route('/addResource', methods=('GET', 'POST'))
-def addResource():
+@app.route('/setResource', methods=('GET', 'POST'))
+def setResource():
     if request.method == 'POST':
-        print('Test')
+        # Get form parameters
         OCID = request.form['OCID']
-        print(OCID)
-        #ScheduleKey = request.form['ScheduleKey']
-        #print(ScheduleKey)
-        #Schedule = request.form['Schedule']
-        #print(Schedule)
+        if 'ScheduleTags' in request.form:
+            ScheduleTags = request.form['ScheduleTags']
+            ScheduleTags = ScheduleTags.replace("\'", "\"")
+            ScheduleTags = json.loads(ScheduleTags)
+        else:
+            # Build ScheduleTags dict from multiple form fields
+            ScheduleTags = {}
+            for key in request.form:
+                if key.startswith('ScheduleKey'):
+                    print(key[12:]+' Yes!')
+                    id = key[12:]
+                    ScheduleTags[request.form[key]] = request.form['Schedule-'+id]
+
+        Action = request.form['Action']
+
+        if Action == 'Update':
+            # Redirect to setResource.html passing arguments from index.html update icon
+            return render_template('setResource.html', ScheduleKeys=ScheduleKeys, OCID=OCID, ScheduleTags=ScheduleTags, Action=Action)
         
-        # Lookup resource type
-        # query: query all resources where identifier = 'ocid1.compartment.oc1..<unique_ID>'
+        else:
+            # Execute the resource tagging
 
-        # Tag the OCI resource
-        print('Tag!')
-        return redirect(url_for('index'))
+            # Lookup resource type
+            search_client = oci.resource_search.ResourceSearchClient(config)
+            searchDetails = oci.resource_search.models.StructuredSearchDetails()
+            searchDetails.query = "query all resources where identifier = '"+OCID+"'"
+            
+            response = search_client.search_resources(searchDetails)
 
-    return render_template('addResource.html')
+            if len(response.data.items) > 0:
+                # Resource found
+
+                # Get existing defined_tags to avoid removing them
+                new_defined_tags = response.data.items[0].defined_tags
+                # Add/Update new Schedule tag
+                new_defined_tags.update({PredefinedTag: ScheduleTags})
+
+                # Tag the OCI resource
+                resource_type = response.data.items[0].resource_type
+                if resource_type == "Instance":
+                        # Tagging Instance resource
+                        changedetails = oci.core.models.UpdateInstanceDetails()
+                        changedetails.defined_tags = new_defined_tags
+
+                        compute = oci.core.ComputeClient(config)
+                        response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
+                        
+                        if response.status == 200:
+                            flash('Resource '+OCID+' set successfully!')
+                        else:
+                            flash('Error adding the resource '+OCID+'!')
+                            return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
+                        
+                # elif resource_type == "DbSystem":
+                #     # TODO
+
+                # elif resource_type == "VmCluster":
+                #     # TODO
+
+                # elif resource_type == "AutonomousDatabase":
+                #     # TODO
+
+                # elif resource_type == "InstancePool":
+                #     # TODO
+
+                else:
+                    # Resource type not supported!
+                    flash('Resource type '+resource_type+' not supported!')
+                    return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
+            else:
+                flash('Resource '+OCID+' not found!')
+                return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
+
+            return redirect(url_for('index'))
+
+    return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action="Add")
 
 @app.route('/exportJSON')
 def exportJSON():
