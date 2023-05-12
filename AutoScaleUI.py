@@ -197,6 +197,7 @@ def Log():
 @app.route('/getLog')
 def getLog():
     def generate():
+        # TODO: Point to OCI-AutoScale log file
         with open('test.log') as f:
             while True:
                 yield f.read()

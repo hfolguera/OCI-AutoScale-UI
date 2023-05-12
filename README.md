@@ -30,7 +30,6 @@ flask run --host 0.0.0.0
 ```
 
 ## Next steps
-- Logging
 - Historico
 - Creación de budgets/notifications/...
 - Edit schedule
