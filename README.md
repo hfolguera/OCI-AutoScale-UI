@@ -40,10 +40,10 @@ flask run --host 0.0.0.0
 - Monitoring? Metrics?
 - Filter resources by instance_type, compartment, status...
 - App versioning
+- Include "Add Schedule" button to dynamically add schedule rows on setResource
 
 ## Issues
 - Copy OCID
 - Fix command-line parameters parser
-- Fix Schedule values alignment
 - Fix table column width
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
