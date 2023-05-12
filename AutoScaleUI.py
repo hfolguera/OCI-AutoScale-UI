@@ -190,9 +190,19 @@ def exportCSV():
 
     return Response(csv_data, mimetype='application/csv', headers={'Content-Disposition':'attachment;filename=AutoScale_Config.csv'})
 
-# @app.route('/log')
-# def streamLog():
-#     return render_template('log.html')
+@app.route('/log')
+def Log():
+    return render_template('log.html')
+
+@app.route('/getLog')
+def getLog():
+    def generate():
+        with open('test.log') as f:
+            while True:
+                yield f.read()
+                sleep(1)
+
+    return app.response_class(generate(), mimetype='text/plain')
 
 @app.route('/health')
 def health():
