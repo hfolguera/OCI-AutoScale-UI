@@ -1,2 +1,3 @@
 export FLASK_APP=AutoScaleUI
 export FLASK_ENV=development
+export DEBUG_METRICS=1

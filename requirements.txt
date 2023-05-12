@@ -1,2 +1,3 @@
 oci
 flask
+prometheus-flask-exporter

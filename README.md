@@ -32,11 +32,9 @@ flask run --host 0.0.0.0
 ## Next steps
 - Historico
 - Creación de budgets/notifications/...
-- Edit schedule
 - 404
 - Dockerize app
 - Login
-- Monitoring? Metrics?
 - Filter resources by instance_type, compartment, status...
 - App versioning
 - Include "Add Schedule" button to dynamically add schedule rows on setResource

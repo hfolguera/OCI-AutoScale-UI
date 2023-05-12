@@ -3,6 +3,7 @@ import time
 import argparse
 import json
 from flask import Flask, request, render_template, url_for, flash, redirect, Response
+from prometheus_flask_exporter import PrometheusMetrics
 
 # Arguments parser
 ## Parse command-line arguments
@@ -46,6 +47,8 @@ def getResources(page=None, per_page='5'):
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
+
+metrics = PrometheusMetrics(app)
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
@@ -201,7 +204,7 @@ def getLog():
         with open('test.log') as f:
             while True:
                 yield f.read()
-                sleep(1)
+                time.sleep(1)
 
     return app.response_class(generate(), mimetype='text/plain')
 
