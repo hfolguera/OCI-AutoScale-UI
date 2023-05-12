@@ -50,6 +50,9 @@ app.config.from_pyfile('config.py')
 
 metrics = PrometheusMetrics(app)
 
+strStartTime = time.strftime("%m/%d/%Y, %H:%M:%S")
+startTime = time.time()
+
 @app.route('/', methods=('GET', 'POST'))
 def index():
     resources = None
@@ -211,6 +214,8 @@ def getLog():
 @app.route('/health')
 def health():
     content = {}
+
+    # Validate OCI connectivity
     try:
         res = getResources(per_page=1)
         
@@ -222,5 +227,10 @@ def health():
         content['status_code']='500'
         content['error_msg']=str(e)
     
+    # Add application time
+    content['start_time'] = strStartTime
+    uptime = time.time() - startTime
+    content['uptime_hours'] = str(uptime/3600)
+
     json_data = json.dumps(content, indent=2)
     return Response(json_data, mimetype='application/json')
