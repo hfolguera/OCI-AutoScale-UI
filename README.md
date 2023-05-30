@@ -10,10 +10,15 @@ OCI-AutoScale-UI provides a user interface to XX and perform basic commands such
 
 ## Installation
 
-### Python
+Install the app requirements depending on deployment method:
+
+### Python
 ```
 sudo pip3 install -r requirements.txt
 ```
+
+### Docker
+#TODO
 
 ## Running the application
 
