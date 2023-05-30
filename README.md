@@ -8,6 +8,15 @@ OCI-AutoScale-UI provides a user interface to XX and perform basic commands such
 
 ## Features
 
+OCI-AutoScale-UI provides the following features:
+- Explore resources with OCI-AutoScale tags
+- Add OCI-AutoScale tags for new resources
+- Edit OCI-AutoScale tags for existing resources
+- Export OCI-AutoScale configuration in JSON or CSV format
+- Display OCI-AutoScale logs through the web interface
+- Application /health endpoint for monitoring purposes
+- Application /metrics endpoint with Prometheus Exporter format
+
 ## Installation
 
 Install the app requirements depending on deployment method:
@@ -78,6 +87,7 @@ sudo systemctl start OCI-AutoScale-UI
 - App versioning
 - Include "Add Schedule" button to dynamically add schedule rows on setResource
 - Include import JSON/CSV resources
+- Include start and stop option
 
 ## Issues
 - Copy OCID
