@@ -4,8 +4,6 @@ This is the code repository for the OCI-AutoScale-UI tool which allows visualizi
 
 OCI-AutoScale is a tool based on the OCI-AutoScale project by Richard Garsthagen (AnykeyNL).
 
-OCI-AutoScale-UI provides a user interface to XX and perform basic commands such as XXX.
-
 ## Features
 
 OCI-AutoScale-UI provides the following features:
@@ -77,7 +75,8 @@ sudo systemctl start OCI-AutoScale-UI
 #### Start app on boot
 #TODO
 
-## Next steps
+## Next steps
+Next features to be implemented:
 - Historico
 - Creación de budgets/notifications/...
 - 404
@@ -90,6 +89,7 @@ sudo systemctl start OCI-AutoScale-UI
 - Include start and stop option
 
 ## Issues
+Known issues to be fixed:
 - Copy OCID
 - Fix command-line parameters parser
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
