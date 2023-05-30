@@ -2,7 +2,7 @@
 
 This is the code repository for the OCI-AutoScale-UI tool which allows visualizing all the configured resources for OCI-AutoScale.
 
-OCI-AutoScale is a tool based on the OCI-AutoScale project by Richard Garsthagen (AnykeyNL).
+OCI-AutoScale is a tool based on the [OCI-AutoScale](https://github.com/AnykeyNL/OCI-AutoScale) project by Richard Garsthagen (AnykeyNL).
 
 ## Features
 
