@@ -3,6 +3,7 @@
 **.bck
 **.old
 **.tmp
+**.out
 .DS_Store
 
 # Ignore Python files
