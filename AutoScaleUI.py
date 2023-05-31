@@ -12,7 +12,7 @@ ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday'
 config = oci.config.from_file()
 oci.config.validate_config(config)
 
-def getResources(page=None, per_page='5', DisplayNameFilter=None, ResouceTypeFilter=None, CompartmentFilter=None, StatusFilter=None):
+def getResources(page=None, per_page='5', DisplayNameFilter="", ResouceTypeFilter="", CompartmentFilter="", StatusFilter=""):
     # Initialize variables
     limit = '9999'
     if per_page == 'All':
@@ -21,7 +21,7 @@ def getResources(page=None, per_page='5', DisplayNameFilter=None, ResouceTypeFil
     # Get all resources with Autoscale tags
     search_client = oci.resource_search.ResourceSearchClient(config)
     searchDetails = oci.resource_search.models.StructuredSearchDetails()
-    searchDetails.query = "query all resources where (definedTags.namespace = '"+PredefinedTag+"')" if str(ResouceTypeFilter)=="None" else "query "+ResouceTypeFilter+" resources where (definedTags.namespace = '"+PredefinedTag+"')"
+    searchDetails.query = "query "+ResouceTypeFilter+" resources where (definedTags.namespace = '"+PredefinedTag+"')" if ResouceTypeFilter else "query all resources where (definedTags.namespace = '"+PredefinedTag+"')"
     searchDetails.query += " && displayName  = '" + DisplayNameFilter + "'" if DisplayNameFilter else ""
     searchDetails.query += " && compartmentId  = '" + CompartmentFilter + "'" if CompartmentFilter else ""
     searchDetails.query += " && lifecycleState  = '" + StatusFilter + "'" if StatusFilter else ""
@@ -83,6 +83,7 @@ def index():
         # Call OCI to search resources
         resources = getResources(page=page, per_page=per_page, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
 
+    ## Pagination parameters
     if 'opc-next-page' in resources.headers:
         next_page_token = resources.headers['opc-next-page']
 
