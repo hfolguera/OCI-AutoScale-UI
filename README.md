@@ -88,5 +88,4 @@ Next features to be implemented:
 
 ## Issues
 Known issues to be fixed:
-- Fix command-line parameters parser
 - Fix pagination: Empty last page, disable previous on first page (after going forward)

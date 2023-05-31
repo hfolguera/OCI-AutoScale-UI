@@ -5,21 +5,6 @@ import json
 from flask import Flask, request, render_template, url_for, flash, redirect, Response
 from prometheus_flask_exporter import PrometheusMetrics
 
-# Arguments parser
-## Parse command-line arguments
-# parser = argparse.ArgumentParser()
-# parser.add_argument('-t', default="", dest='config_profile', help='Config file section to use (tenancy profile)')
-# parser.add_argument('-tag', default="Schedule", dest='tag', help='Tag to examine, Default=Schedule')
-# parser.add_argument('-topic', default="", dest='topic', help='Topic OCID to send summary in home region')
-# parser.add_argument('-log', default="", dest='log', help='Log OCID to send log output to')
-# parser.add_argument('-loglevel', default="ERRORS", dest='log_level', help='Log level [ALL | ERRORS] ')
-
-# args = parser.parse_args()
-
-## Assign variables
-#PredefinedTag = args.tag
-PredefinedTag = 'Schedule'
-
 # Global variables
 ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -52,6 +37,8 @@ metrics = PrometheusMetrics(app)
 
 strStartTime = time.strftime("%m/%d/%Y, %H:%M:%S")
 startTime = time.time()
+
+PredefinedTag = app.config["PREDEFINED_TAG"]
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
