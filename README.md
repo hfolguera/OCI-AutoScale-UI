@@ -29,16 +29,14 @@ sudo pip3 install -r requirements.txt
 
 ## Running the application
 
-### Start in DEBUG mode
+### Start application in Development mode
 ```
-. ./setenv.sh
-flask run
+FLASK_APP=AutoScaleUI FLASK_ENV=development DEBUG_METRICS=1 flask run
 ```
 
-### Python
+### Python (Production mode)
 ```
-. ./setenv.sh
-flask run --host 0.0.0.0
+FLASK_APP=AutoScaleUI FLASK_ENV=production flask run --host 0.0.0.0
 ```
 
 #### Start app on boot
@@ -90,6 +88,5 @@ Next features to be implemented:
 
 ## Issues
 Known issues to be fixed:
-- Copy OCID
 - Fix command-line parameters parser
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
