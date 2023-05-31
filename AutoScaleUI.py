@@ -39,6 +39,7 @@ strStartTime = time.strftime("%m/%d/%Y, %H:%M:%S")
 startTime = time.time()
 
 PredefinedTag = app.config["PREDEFINED_TAG"]
+AllowStartStopResources = app.config["ALLOW_START_STOP_RESOURCES"]
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
@@ -123,9 +124,9 @@ def setResource():
                         response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
                         
                         if response.status == 200:
-                            flash('Resource '+OCID+' set successfully!')
+                            flash('Resource '+OCID+' set successfully!', 'success')
                         else:
-                            flash('Error adding the resource '+OCID+'!')
+                            flash('Error adding the resource '+OCID+'!', 'danger')
                             return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
                         
                 # elif resource_type == "DbSystem":
@@ -142,15 +143,27 @@ def setResource():
 
                 else:
                     # Resource type not supported!
-                    flash('Resource type '+resource_type+' not supported!')
+                    flash('Resource type '+resource_type+' not supported!', 'danger')
                     return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
             else:
-                flash('Resource '+OCID+' not found!')
+                flash('Resource '+OCID+' not found!', 'danger')
                 return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
 
             return redirect(url_for('index'))
 
     return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action="Add")
+
+@app.route('/startResource', methods=('GET', 'POST'))
+def startResource():
+    if AllowStartStopResources != True:
+        flash('START operation is not allowed!!', 'danger')
+        return redirect(url_for('index'))
+
+@app.route('/stopResource', methods=('GET', 'POST'))
+def stopResource():
+    if AllowStartStopResources != True:
+        flash('STOP operation is not allowed!!', 'danger')
+        return redirect(url_for('index'))
 
 @app.route('/exportJSON')
 def exportJSON():
