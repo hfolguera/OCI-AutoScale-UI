@@ -80,7 +80,6 @@ Next features to be implemented:
 - 404
 - Dockerize app
 - Login
-- Filter resources by instance_type, compartment, status...
 - App versioning
 - Include "Add Schedule" button to dynamically add schedule rows on setResource
 - Include import JSON/CSV resources
@@ -89,3 +88,4 @@ Next features to be implemented:
 ## Issues
 Known issues to be fixed:
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
+- Fix: Keep pagination (per_page) parameter when filter is used

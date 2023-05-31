@@ -12,7 +12,7 @@ ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday'
 config = oci.config.from_file()
 oci.config.validate_config(config)
 
-def getResources(page=None, per_page='5'):
+def getResources(page=None, per_page='5', DisplayNameFilter=None, ResouceTypeFilter=None, CompartmentFilter=None, StatusFilter=None):
     # Initialize variables
     limit = '9999'
     if per_page == 'All':
@@ -21,8 +21,11 @@ def getResources(page=None, per_page='5'):
     # Get all resources with Autoscale tags
     search_client = oci.resource_search.ResourceSearchClient(config)
     searchDetails = oci.resource_search.models.StructuredSearchDetails()
-    searchDetails.query = "query all resources where (definedTags.namespace = '"+PredefinedTag+"')"
-
+    searchDetails.query = "query all resources where (definedTags.namespace = '"+PredefinedTag+"')" if str(ResouceTypeFilter)=="None" else "query "+ResouceTypeFilter+" resources where (definedTags.namespace = '"+PredefinedTag+"')"
+    searchDetails.query += " && displayName  = '" + DisplayNameFilter + "'" if DisplayNameFilter else ""
+    searchDetails.query += " && compartmentId  = '" + CompartmentFilter + "'" if CompartmentFilter else ""
+    searchDetails.query += " && lifecycleState  = '" + StatusFilter + "'" if StatusFilter else ""
+    
     if page == None:
         response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails)
     else:
@@ -49,19 +52,36 @@ def index():
     next_page_token = None
     previous_page_token = None
 
+    DisplayNameFilter = ""
+    ResouceTypeFilter = ""
+    CompartmentFilter = ""
+    StatusFilter = ""
+
     if request.method == 'GET':
         # Get Method: Homepage has been called
         # Call OCI to search resources
         resources = getResources()
 
     else:
-        # POST Method: Pagination has been used
+        # POST Method
+        ## Filter parameters
+        if 'DisplayNameFilter' in request.form:
+            DisplayNameFilter = request.form['DisplayNameFilter']
+        if 'ResouceTypeFilter' in request.form:
+            ResouceTypeFilter = request.form['ResouceTypeFilter']
+        if 'CompartmentFilter' in request.form:
+            CompartmentFilter = request.form['CompartmentFilter']
+        if 'StatusFilter' in request.form:
+            StatusFilter = request.form['StatusFilter']
+
+        ## Pagination parameters
         if 'page' in request.form:
             page = request.form['page']
-        per_page = request.form['per_page']
+        if 'per_page' in request.form:
+            per_page = request.form['per_page']
 
         # Call OCI to search resources
-        resources = getResources(page=page, per_page=per_page)
+        resources = getResources(page=page, per_page=per_page, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
 
     if 'opc-next-page' in resources.headers:
         next_page_token = resources.headers['opc-next-page']
@@ -69,7 +89,7 @@ def index():
     if 'opc-previous-page' in resources.headers:
         previous_page_token = resources.headers['opc-previous-page']
 
-    return render_template('index.html', resources=resources.data, PredefinedTag=PredefinedTag, next_page_token=next_page_token, per_page=per_page, previous_page_token=previous_page_token)
+    return render_template('index.html', resources=resources.data, PredefinedTag=PredefinedTag, next_page_token=next_page_token, per_page=per_page, previous_page_token=previous_page_token, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
 
 @app.route('/setResource', methods=('GET', 'POST'))
 def setResource():
