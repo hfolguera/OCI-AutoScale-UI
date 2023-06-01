@@ -86,9 +86,9 @@ Next features to be implemented:
 - Include start and stop option
 - Compliance view: Show the real state of the resources vs the expected. Include discrepancy summary?
 - Include embeded resources metrics
+- Allow to export current filter or all resources
 
 ## Issues
 Known issues to be fixed:
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
 - Fix: Keep pagination (per_page) parameter when filter is used
-- Fix: Export options only export first 5 resources

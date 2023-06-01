@@ -188,7 +188,7 @@ def stopResource():
 
 @app.route('/exportJSON')
 def exportJSON():
-    resources = getResources()
+    resources = getResources(per_page='All')
 
     items = []
     for item in resources.data:
@@ -209,7 +209,7 @@ def exportJSON():
 
 @app.route('/exportCSV')
 def exportCSV():
-    resources = getResources()
+    resources = getResources(per_page='All')
 
     csv_data = "display_name; identifier; compartment_id; defined_tags; lifecycle_state\n"
     for item in resources.data:
