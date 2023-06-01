@@ -53,7 +53,7 @@ User=opc
 WorkingDirectory=/home/opc/OCI-AutoScale-UI
 Environment=FLASK_APP=AutoScaleUI
 Environment=FLASK_ENV=production
-ExecStart=/usr/local/bin/flask run
+ExecStart=/usr/local/bin/flask run --host=0.0.0.0
 Restart=always
 
 [Install]
@@ -84,8 +84,11 @@ Next features to be implemented:
 - Include "Add Schedule" button to dynamically add schedule rows on setResource
 - Include import JSON/CSV resources
 - Include start and stop option
+- Compliance view: Show the real state of the resources vs the expected. Include discrepancy summary?
+- Include embeded resources metrics
 
 ## Issues
 Known issues to be fixed:
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
 - Fix: Keep pagination (per_page) parameter when filter is used
+- Fix: Export options only export first 5 resources
