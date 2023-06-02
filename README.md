@@ -27,6 +27,9 @@ sudo pip3 install -r requirements.txt
 ### Docker
 #TODO
 
+## Configuration
+#TODO: Explain configuration file and parameters purpose
+
 ## Running the application
 
 ### Start application in Development mode
@@ -53,6 +56,7 @@ User=opc
 WorkingDirectory=/home/opc/OCI-AutoScale-UI
 Environment=FLASK_APP=AutoScaleUI
 Environment=FLASK_ENV=production
+Environment=DEBUG_METRICS=1
 ExecStart=/usr/local/bin/flask run --host=0.0.0.0
 Restart=always
 
@@ -92,3 +96,5 @@ Next features to be implemented:
 Known issues to be fixed:
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
 - Fix: Keep pagination (per_page) parameter when filter is used
+- Fix: Metrics are disabled when run in the Flask development server with reload enabled. ...them anyway
+- Unify tagResource call on setResource

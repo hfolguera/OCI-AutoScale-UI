@@ -2,6 +2,7 @@ import oci
 import time
 import argparse
 import json
+import pandas as pd
 from flask import Flask, request, render_template, url_for, flash, redirect, Response
 from prometheus_flask_exporter import PrometheusMetrics
 
@@ -12,7 +13,7 @@ ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday'
 config = oci.config.from_file()
 oci.config.validate_config(config)
 
-def getResources(page=None, per_page='5', DisplayNameFilter="", ResouceTypeFilter="", CompartmentFilter="", StatusFilter=""):
+def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilter="", CompartmentFilter="", StatusFilter=""):
     # Initialize variables
     limit = '9999'
     if per_page == 'All':
@@ -33,6 +34,63 @@ def getResources(page=None, per_page='5', DisplayNameFilter="", ResouceTypeFilte
 
     return response
 
+def tagResource(OCID, ScheduleTags):
+            # Execute the resource tagging
+
+            # Lookup resource type
+            search_client = oci.resource_search.ResourceSearchClient(config)
+            searchDetails = oci.resource_search.models.StructuredSearchDetails()
+            searchDetails.query = "query all resources where identifier = '"+OCID+"'"
+            
+            response = search_client.search_resources(searchDetails)
+
+            if len(response.data.items) > 0:
+                # Resource found
+
+                # Get existing defined_tags to avoid removing them
+                new_defined_tags = response.data.items[0].defined_tags
+                # Add/Update new Schedule tag
+                new_defined_tags.update({PredefinedTag: ScheduleTags})
+
+                # Tag the OCI resource
+                resource_type = response.data.items[0].resource_type
+                if resource_type == "Instance":
+                        # Tagging Instance resource
+                        changedetails = oci.core.models.UpdateInstanceDetails()
+                        changedetails.defined_tags = new_defined_tags
+
+                        compute = oci.core.ComputeClient(config)
+                        response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
+
+                        return response                        
+                        # if response.status == 200:
+                        #     flash('Resource '+OCID+' set successfully!', 'success')
+                        # else:
+                        #     flash('Error adding the resource '+OCID+'!', 'danger')
+                        #     return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
+                        
+                # elif resource_type == "DbSystem":
+                #     # TODO
+
+                # elif resource_type == "VmCluster":
+                #     # TODO
+
+                # elif resource_type == "AutonomousDatabase":
+                #     # TODO
+
+                # elif resource_type == "InstancePool":
+                #     # TODO
+
+                else:
+                    # Resource type not supported!
+                    flash('Resource type '+resource_type+' not supported!', 'danger')
+                    # return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
+                    # TODO: Return a failed response. How?
+                    return Response(status=500)
+            else:
+                flash('Resource '+OCID+' not found!', 'danger')
+                return Response(status=500)
+
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
@@ -48,7 +106,7 @@ AllowStartStopResources = app.config["ALLOW_START_STOP_RESOURCES"]
 def index():
     resources = None
     page = None
-    per_page = '5'
+    per_page = '10'
     next_page_token = None
     previous_page_token = None
 
@@ -106,7 +164,6 @@ def setResource():
             ScheduleTags = {}
             for key in request.form:
                 if key.startswith('ScheduleKey'):
-                    print(key[12:]+' Yes!')
                     id = key[12:]
                     ScheduleTags[request.form[key]] = request.form['Schedule-'+id]
 
@@ -196,7 +253,8 @@ def exportJSON():
         row['display_name'] = item.display_name
         row['identifier'] = item.identifier
         row['compartment_id'] = item.compartment_id
-        row['defined_tags'] = item.defined_tags
+        row['defined_tags'] = {PredefinedTag: {}}
+        row['defined_tags'][PredefinedTag] = item.defined_tags[PredefinedTag]
         row['lifecycle_state'] = item.lifecycle_state
         items.append(row)
     
@@ -213,9 +271,71 @@ def exportCSV():
 
     csv_data = "display_name; identifier; compartment_id; defined_tags; lifecycle_state\n"
     for item in resources.data:
-        csv_data = csv_data + item.display_name+"; "+item.identifier+"; "+item.compartment_id+"; "+str(item.defined_tags)+"; "+item.lifecycle_state+";\n"
+        csv_data = csv_data + item.display_name+"; "+item.identifier+"; "+item.compartment_id+"; "+str({PredefinedTag: item.defined_tags[PredefinedTag]})+"; "+item.lifecycle_state+";\n"
 
     return Response(csv_data, mimetype='application/csv', headers={'Content-Disposition':'attachment;filename=AutoScale_Config.csv'})
+
+@app.route('/importJSON', methods=('GET', 'POST'))
+def importJSON():
+    if request.method == 'POST':
+        if 'file' in request.files:
+            file = request.files['file']
+            
+            # TODO: Verify file is JSON format
+            json_object = json.loads(file.read())
+            error_count = 0
+            for item in json_object['items']:
+                response = tagResource(OCID=item['identifier'], ScheduleTags=item['defined_tags'][PredefinedTag])
+                
+                # Handle response
+                if response.status == 200:
+                    flash('Resource '+item['identifier']+' set successfully!', 'success')
+                else:
+                    flash('Error adding the resource '+item['identifier']+'!', 'danger')
+                    error_count+=1
+            
+            if error_count == 0:
+                flash('JSON file imported successfully!!', 'success')
+            else:
+                flash('JSON file imported with errors!!', 'danger')
+            return redirect(url_for('index'))
+
+    else:
+        return render_template('importFile.html')
+
+@app.route('/importCSV', methods=('GET', 'POST'))
+def importCSV():
+    if request.method == 'POST':
+        if 'file' in request.files:
+            file = request.files['file']
+
+            # TODO: Verify file is CSV format
+            csv_object = pd.read_csv(file, delimiter=';', header=0, index_col=False)
+            error_count = 0
+            for index,row in csv_object.iterrows():
+                OCID = row[1].lstrip()
+                json_ScheduleTags = row[3]
+                json_ScheduleTags = json_ScheduleTags.replace("\'", "\"")
+                json_ScheduleTags = json.loads(json_ScheduleTags)
+
+                response = tagResource(OCID=OCID, ScheduleTags=json_ScheduleTags[PredefinedTag])
+
+                # Handle response
+                if response.status == 200:
+                    flash('Resource '+OCID+' set successfully!', 'success')
+                else:
+                    flash('Error adding the resource '+OCID+'!', 'danger')
+                    error_count+=1
+                
+            if error_count == 0:
+                flash('CSV file imported successfully!!', 'success')
+            else:
+                flash('CSV file imported with errors!!', 'danger')
+            return redirect(url_for('index'))
+    
+    else:
+        return render_template('importFile.html')
+
 
 @app.route('/log')
 def Log():

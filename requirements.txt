@@ -1,3 +1,4 @@
 oci
 flask
 prometheus-flask-exporter
+pandas

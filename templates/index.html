@@ -53,10 +53,19 @@
         </div>
         <div class="col-4">
             <a href="/" class="btn btn-secondary float-end me-1" role="button">Refresh</a>
-            <a href="#" class="btn btn-secondary float-end me-1 dropdown-toggle" role="button" id="dropdownMenuExport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Export</a>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuExport">
-                <a class="dropdown-item" href="/exportCSV">CSV</a>
-                <a class="dropdown-item" href="/exportJSON">JSON</a>
+            <div>
+                <a href="#" class="btn btn-secondary float-end me-1 dropdown-toggle" role="button" id="dropdownMenuImport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Import</a>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuImport">
+                    <a class="dropdown-item" href="/importCSV">CSV</a>
+                    <a class="dropdown-item" href="/importJSON">JSON</a>
+                </div>
+            </div>
+            <div>
+                <a href="#" class="btn btn-secondary float-end me-1 dropdown-toggle" role="button" id="dropdownMenuExport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Export</a>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuExport">
+                    <a class="dropdown-item" href="/exportCSV">CSV</a>
+                    <a class="dropdown-item" href="/exportJSON">JSON</a>
+                </div>
             </div>
             <a href="/setResource" class="btn btn-primary float-end me-1" role="button">Add Schedule</a>
         </div>
@@ -128,7 +137,6 @@
                     <li class="page-item {{ 'disabled' if next_page_token is none }}"><button class="page-link" id="page" name="page" value="{{ next_page_token }}">Next</button></li>
                     <li>
                         <select class="form-control" id="per_page" name="per_page" onchange="this.form.submit()">
-                            <option value="5" {{ 'selected' if per_page == '5' }} >Show 5</option>
                             <option value="10" {{ 'selected' if per_page == '10' }} >Show 10</option>
                             <option value="20" {{ 'selected' if per_page == '20' }}>Show 20</option>
                             <option value="50" {{ 'selected' if per_page == '50' }}>Show 50</option>

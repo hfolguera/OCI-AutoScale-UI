@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Import File {% endblock %}</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+      <div class="mb-3">
+        <div class="col-4">
+          <label for="file" class="form-label">Select the file with schedules to upload:</label>
+          <input class="form-control" type="file" id="file" name="file">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>  
+
+{% endblock %}
