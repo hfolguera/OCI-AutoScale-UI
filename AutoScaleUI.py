@@ -5,6 +5,8 @@ import json
 import pandas as pd
 from flask import Flask, request, render_template, url_for, flash, redirect, Response
 from prometheus_flask_exporter import PrometheusMetrics
+import StartStopFunctions
+import TagFunctions
 
 # Global variables
 ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -33,63 +35,6 @@ def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilt
         response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails, page=page)
 
     return response
-
-def tagResource(OCID, ScheduleTags):
-            # Execute the resource tagging
-
-            # Lookup resource type
-            search_client = oci.resource_search.ResourceSearchClient(config)
-            searchDetails = oci.resource_search.models.StructuredSearchDetails()
-            searchDetails.query = "query all resources where identifier = '"+OCID+"'"
-            
-            response = search_client.search_resources(searchDetails)
-
-            if len(response.data.items) > 0:
-                # Resource found
-
-                # Get existing defined_tags to avoid removing them
-                new_defined_tags = response.data.items[0].defined_tags
-                # Add/Update new Schedule tag
-                new_defined_tags.update({PredefinedTag: ScheduleTags})
-
-                # Tag the OCI resource
-                resource_type = response.data.items[0].resource_type
-                if resource_type == "Instance":
-                        # Tagging Instance resource
-                        changedetails = oci.core.models.UpdateInstanceDetails()
-                        changedetails.defined_tags = new_defined_tags
-
-                        compute = oci.core.ComputeClient(config)
-                        response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
-
-                        return response                        
-                        # if response.status == 200:
-                        #     flash('Resource '+OCID+' set successfully!', 'success')
-                        # else:
-                        #     flash('Error adding the resource '+OCID+'!', 'danger')
-                        #     return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
-                        
-                # elif resource_type == "DbSystem":
-                #     # TODO
-
-                # elif resource_type == "VmCluster":
-                #     # TODO
-
-                # elif resource_type == "AutonomousDatabase":
-                #     # TODO
-
-                # elif resource_type == "InstancePool":
-                #     # TODO
-
-                else:
-                    # Resource type not supported!
-                    flash('Resource type '+resource_type+' not supported!', 'danger')
-                    # return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
-                    # TODO: Return a failed response. How?
-                    return Response(status=500)
-            else:
-                flash('Resource '+OCID+' not found!', 'danger')
-                return Response(status=500)
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -174,59 +119,14 @@ def setResource():
             return render_template('setResource.html', ScheduleKeys=ScheduleKeys, OCID=OCID, ScheduleTags=ScheduleTags, Action=Action)
         
         else:
-            # Execute the resource tagging
+            response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=OCID, ScheduleTags=ScheduleTags)
 
-            # Lookup resource type
-            search_client = oci.resource_search.ResourceSearchClient(config)
-            searchDetails = oci.resource_search.models.StructuredSearchDetails()
-            searchDetails.query = "query all resources where identifier = '"+OCID+"'"
-            
-            response = search_client.search_resources(searchDetails)
-
-            if len(response.data.items) > 0:
-                # Resource found
-
-                # Get existing defined_tags to avoid removing them
-                new_defined_tags = response.data.items[0].defined_tags
-                # Add/Update new Schedule tag
-                new_defined_tags.update({PredefinedTag: ScheduleTags})
-
-                # Tag the OCI resource
-                resource_type = response.data.items[0].resource_type
-                if resource_type == "Instance":
-                        # Tagging Instance resource
-                        changedetails = oci.core.models.UpdateInstanceDetails()
-                        changedetails.defined_tags = new_defined_tags
-
-                        compute = oci.core.ComputeClient(config)
-                        response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
-                        
-                        if response.status == 200:
-                            flash('Resource '+OCID+' set successfully!', 'success')
-                        else:
-                            flash('Error adding the resource '+OCID+'!', 'danger')
-                            return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
-                        
-                # elif resource_type == "DbSystem":
-                #     # TODO
-
-                # elif resource_type == "VmCluster":
-                #     # TODO
-
-                # elif resource_type == "AutonomousDatabase":
-                #     # TODO
-
-                # elif resource_type == "InstancePool":
-                #     # TODO
-
-                else:
-                    # Resource type not supported!
-                    flash('Resource type '+resource_type+' not supported!', 'danger')
-                    return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
+            # Handle response
+            if response.status == 200:
+                flash('Resource '+OCID+' set successfully!', 'success')
             else:
-                flash('Resource '+OCID+' not found!', 'danger')
-                return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
-
+                flash('Error adding the resource '+OCID+'!', 'danger')
+            
             return redirect(url_for('index'))
 
     return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action="Add")
@@ -236,11 +136,69 @@ def startResource():
     if AllowStartStopResources != True:
         flash('START operation is not allowed!!', 'danger')
         return redirect(url_for('index'))
+    else:
+        OCID = request.form['OCID']
+        ResourceType = request.form["ResourceType"]
+        response = ""
+
+        if ResourceType == "Instance":
+            response = StartStopFunctions.startInstance(config=config, OCID=OCID)
+
+        # elif resource_type == "DbSystem":
+        #     # TODO
+
+        # elif resource_type == "VmCluster":
+        #     # TODO
+
+        # elif resource_type == "AutonomousDatabase":
+        #     # TODO
+
+        # elif resource_type == "InstancePool":
+        #     # TODO
+
+        else:
+            # Resource type not supported!
+            flash('Resource type '+resource_type+' not supported!', 'danger')
+
+        if response.status_code == 200:
+            flash('Resource '+OCID+' started!', 'success')
+        else:
+            flash('Error starting resource '+OCID+'!!', 'danger')
+        return redirect(url_for('index'))
 
 @app.route('/stopResource', methods=('GET', 'POST'))
 def stopResource():
     if AllowStartStopResources != True:
         flash('STOP operation is not allowed!!', 'danger')
+        return redirect(url_for('index'))
+    else:
+        OCID = request.form['OCID']
+        ResourceType = request.form["ResourceType"]
+        response = ""
+
+        if ResourceType == "Instance":
+            response = StartStopFunctions.stopInstance(config=config, OCID=OCID)
+
+        # elif resource_type == "DbSystem":
+        #     # TODO
+
+        # elif resource_type == "VmCluster":
+        #     # TODO
+
+        # elif resource_type == "AutonomousDatabase":
+        #     # TODO
+
+        # elif resource_type == "InstancePool":
+        #     # TODO
+
+        else:
+            # Resource type not supported!
+            flash('Resource type '+resource_type+' not supported!', 'danger')
+
+        if response.status_code == 200:
+            flash('Resource '+OCID+' stopped!', 'success')
+        else:
+            flash('Error stopping resource '+OCID+'!!', 'danger')
         return redirect(url_for('index'))
 
 @app.route('/exportJSON')
@@ -285,7 +243,7 @@ def importJSON():
             json_object = json.loads(file.read())
             error_count = 0
             for item in json_object['items']:
-                response = tagResource(OCID=item['identifier'], ScheduleTags=item['defined_tags'][PredefinedTag])
+                response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=item['identifier'], ScheduleTags=item['defined_tags'][PredefinedTag])
                 
                 # Handle response
                 if response.status == 200:
@@ -318,7 +276,7 @@ def importCSV():
                 json_ScheduleTags = json_ScheduleTags.replace("\'", "\"")
                 json_ScheduleTags = json.loads(json_ScheduleTags)
 
-                response = tagResource(OCID=OCID, ScheduleTags=json_ScheduleTags[PredefinedTag])
+                response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=OCID, ScheduleTags=json_ScheduleTags[PredefinedTag])
 
                 # Handle response
                 if response.status == 200:

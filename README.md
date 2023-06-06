@@ -96,4 +96,3 @@ Known issues to be fixed:
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
 - Fix: Keep pagination (per_page) parameter when filter is used
 - Fix: Metrics are disabled when run in the Flask development server with reload enabled. ...them anyway
-- Unify tagResource call on setResource

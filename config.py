@@ -11,7 +11,7 @@ PREDEFINED_TAG = "Schedule"
 #TOPIC
 #LOG
 #LOGLEVEL
-ALLOW_START_STOP_RESOURCES = False
+ALLOW_START_STOP_RESOURCES = True
 
 # Login configuration variable # TODO
 LOGIN_REQUIRED = False
