@@ -86,7 +86,6 @@ Next features to be implemented:
 - Login
 - App versioning
 - Include "Add Schedule" button to dynamically add schedule rows on setResource
-- Include start and stop option
 - Compliance view: Show the real state of the resources vs the expected. Include discrepancy summary?
 - Include embeded resources metrics
 - Allow to export current filter or all resources
