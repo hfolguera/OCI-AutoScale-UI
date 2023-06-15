@@ -236,10 +236,43 @@ def exportCSV():
 
     return Response(csv_data, mimetype='application/csv', headers={'Content-Disposition':'attachment;filename=AutoScale_Config.csv'})
 
-@app.route('/exportREST')
+@app.route('/exportREST', methods=('GET', 'POST'))
 def exportREST():
-    #TODO
-    print('#TODO')
+    if request.method == 'POST':
+        if 'URL' in request.form:
+            URL = request.form["URL"]
+
+            # Get the resources
+            resources = getResources(per_page='All')
+
+            error_count = 0
+            for item in resources.data:
+                row = {}
+                row["ocid"] = item.identifier
+                row["display_name"] = item.display_name
+                row["resource_type"] = item.resource_type
+                row["schedule"] = str(item.defined_tags[PredefinedTag])
+
+                json_row = json.dumps(row)
+
+                # Execute the PUT command
+                response = requests.post(URL, data=json_row, headers={"Content-Type": "application/json"})
+
+                if response.status_code == 201:
+                    flash('Resource '+item.identifier+' exported successfully!', 'success')
+                else:
+                    flash('Error adding the resource '+item.identifier+'!', 'danger')
+                    error_count+=1
+
+            if error_count == 0:
+                flash('REST resources exported successfully!!', 'success')
+            else:
+                flash('REST resources exported with errors!!', 'danger')
+
+            return redirect(url_for('index'))
+    
+    else:
+        return render_template('exportREST.html', RestUrl=RestUrl)
 
 @app.route('/importJSON', methods=('GET', 'POST'))
 def importJSON():
@@ -342,7 +375,7 @@ def Log():
 def getLog():
     def generate():
         # TODO: Point to OCI-AutoScale log file
-        with open('test.log') as f:
+        with open('../OCI-AutoScale/automation.log') as f:
             while True:
                 yield f.read()
                 time.sleep(1)

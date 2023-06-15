@@ -19,4 +19,4 @@ LOGIN_USERNAME = os.environ.get("FLASK_USERNAME", "")
 LOGIN_PASSWORD = os.environ.get("FLASK_PASSWORD", "")
 
 # REST URL
-REST_URL = "https://g29dbebba3538cf-auto.adb.eu-madrid-1.oraclecloudapps.com/ords/automation/schedules"
+REST_URL = "https://g29dbebba3538cf-auto.adb.eu-madrid-1.oraclecloudapps.com/ords/automation/schedules/"

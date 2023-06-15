@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Export REST {% endblock %}</h1>
+
+    <form method="POST">
+      <div class="mb-3">
+        <div class="col-8">
+          <label for="URL" class="form-label">REST URL:</label>
+          <input class="form-control" type="text" id="URL" name="URL" value="{{ RestUrl }}">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>  
+
+{% endblock %}
