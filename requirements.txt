@@ -1,4 +1,5 @@
 oci
 flask
+requests
 prometheus-flask-exporter
 pandas

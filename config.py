@@ -17,3 +17,6 @@ ALLOW_START_STOP_RESOURCES = True
 LOGIN_REQUIRED = False
 LOGIN_USERNAME = os.environ.get("FLASK_USERNAME", "")
 LOGIN_PASSWORD = os.environ.get("FLASK_PASSWORD", "")
+
+# REST URL
+REST_URL = "https://g29dbebba3538cf-auto.adb.eu-madrid-1.oraclecloudapps.com/ords/automation/schedules"

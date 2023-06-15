@@ -2,6 +2,7 @@ import oci
 import time
 import argparse
 import json
+import requests
 import pandas as pd
 from flask import Flask, request, render_template, url_for, flash, redirect, Response
 from prometheus_flask_exporter import PrometheusMetrics
@@ -46,6 +47,8 @@ startTime = time.time()
 
 PredefinedTag = app.config["PREDEFINED_TAG"]
 AllowStartStopResources = app.config["ALLOW_START_STOP_RESOURCES"]
+
+RestUrl = app.config["REST_URL"]
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
@@ -233,6 +236,11 @@ def exportCSV():
 
     return Response(csv_data, mimetype='application/csv', headers={'Content-Disposition':'attachment;filename=AutoScale_Config.csv'})
 
+@app.route('/exportREST')
+def exportREST():
+    #TODO
+    print('#TODO')
+
 @app.route('/importJSON', methods=('GET', 'POST'))
 def importJSON():
     if request.method == 'POST':
@@ -294,6 +302,37 @@ def importCSV():
     else:
         return render_template('importFile.html')
 
+@app.route('/importREST', methods=('GET', 'POST'))
+def importREST():
+    if request.method == 'POST':
+        if 'URL' in request.form:
+            URL = request.form["URL"]
+
+            # Execute the GET command
+            response = requests.get(URL).json()
+
+            # Configure resources
+            error_count = 0
+            for item in response["items"]:
+                json_ScheduleTags = json.loads(item["schedule"])
+                response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=item["ocid"], ScheduleTags=json_ScheduleTags)
+
+                # Handle response
+                if response.status == 200:
+                    flash('Resource '+item["ocid"]+' set successfully!', 'success')
+                else:
+                    flash('Error adding the resource '+item["ocid"]+'!', 'danger')
+                    error_count+=1
+
+            if error_count == 0:
+                flash('REST resources imported successfully!!', 'success')
+            else:
+                flash('REST resources imported with errors!!', 'danger')
+
+            return redirect(url_for('index'))
+
+    else:
+        return render_template('importREST.html', RestUrl=RestUrl)
 
 @app.route('/log')
 def Log():
