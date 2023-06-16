@@ -6,6 +6,9 @@ SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "")
 SESSION_COOKIE_NAME = "OCIAutoScaleUI"
 DEBUG_METRICS = 1
 
+# OCI configuration variables
+USE_INSTANCE_PRINCIPAL = False
+
 # App configuration variables
 PREDEFINED_TAG = "Schedule"
 #TOPIC

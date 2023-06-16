@@ -1,11 +1,11 @@
 import oci
 from flask import flash, Response
 
-def tagResource(config, PredefinedTag, OCID, ScheduleTags):
+def tagResource(config, signer, PredefinedTag, OCID, ScheduleTags):
             # Execute the resource tagging
 
             # Lookup resource type
-            search_client = oci.resource_search.ResourceSearchClient(config)
+            search_client = oci.resource_search.ResourceSearchClient(config=config, signer=signer)
             searchDetails = oci.resource_search.models.StructuredSearchDetails()
             searchDetails.query = "query all resources where identifier = '"+OCID+"'"
             
@@ -26,7 +26,7 @@ def tagResource(config, PredefinedTag, OCID, ScheduleTags):
                         changedetails = oci.core.models.UpdateInstanceDetails()
                         changedetails.defined_tags = new_defined_tags
 
-                        compute = oci.core.ComputeClient(config)
+                        compute = oci.core.ComputeClient(config=config, signer=signer)
                         response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
 
                         return response                        

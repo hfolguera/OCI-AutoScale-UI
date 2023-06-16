@@ -1,8 +1,8 @@
 import oci
 from flask import Response
 
-def startInstance(config, OCID):
-    compute = oci.core.ComputeClient(config)
+def startInstance(config, signer, OCID):
+    compute = oci.core.ComputeClient(config=config, signer=signer)
 
     resourceDetails = compute.get_instance(instance_id=OCID).data
 
@@ -15,8 +15,8 @@ def startInstance(config, OCID):
     else:
         return Response(status=200)
 
-def stopInstance(config, OCID):
-    compute = oci.core.ComputeClient(config)
+def stopInstance(config, signer, OCID):
+    compute = oci.core.ComputeClient(config=config, signer=signer)
 
     resourceDetails = compute.get_instance(instance_id=OCID).data
 

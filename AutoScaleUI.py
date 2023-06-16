@@ -12,31 +12,6 @@ import TagFunctions
 # Global variables
 ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-# Load OCI-Cli configuration from $HOME/.oci
-config = oci.config.from_file()
-oci.config.validate_config(config)
-
-def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilter="", CompartmentFilter="", StatusFilter=""):
-    # Initialize variables
-    limit = '9999'
-    if per_page == 'All':
-        per_page = limit
-
-    # Get all resources with Autoscale tags
-    search_client = oci.resource_search.ResourceSearchClient(config)
-    searchDetails = oci.resource_search.models.StructuredSearchDetails()
-    searchDetails.query = "query "+ResouceTypeFilter+" resources where (definedTags.namespace = '"+PredefinedTag+"')" if ResouceTypeFilter else "query all resources where (definedTags.namespace = '"+PredefinedTag+"')"
-    searchDetails.query += " && displayName  = '" + DisplayNameFilter + "'" if DisplayNameFilter else ""
-    searchDetails.query += " && compartmentId  = '" + CompartmentFilter + "'" if CompartmentFilter else ""
-    searchDetails.query += " && lifecycleState  = '" + StatusFilter + "'" if StatusFilter else ""
-    
-    if page == None:
-        response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails)
-    else:
-        response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails, page=page)
-
-    return response
-
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
@@ -50,6 +25,50 @@ AllowStartStopResources = app.config["ALLOW_START_STOP_RESOURCES"]
 
 RestUrl = app.config["REST_URL"]
 
+UseInstancePrincipal = app.config["USE_INSTANCE_PRINCIPAL"]
+
+# Load OCI-Cli configuration
+if UseInstancePrincipal:
+    signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+    config = {'region': signer.region, 'tenancy': signer.tenancy_id}
+else:
+    config = oci.config.from_file()
+    oci.config.validate_config(config)
+    
+    signer = oci.signer.Signer(
+        tenancy=config["tenancy"],
+        user=config["user"],
+        fingerprint=config["fingerprint"],
+        private_key_file_location=config.get("key_file"),
+        pass_phrase=oci.config.get_config_value_or_default(config, "pass_phrase"),
+        private_key_content=config.get("key_content")
+    )
+
+# Global functions
+def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilter="", CompartmentFilter="", StatusFilter=""):
+    # Initialize variables
+    limit = '9999'
+    if per_page == 'All':
+        per_page = limit
+
+    # Get all resources with Autoscale tags
+    search_client = oci.resource_search.ResourceSearchClient(config=config,signer=signer)
+    searchDetails = oci.resource_search.models.StructuredSearchDetails()
+    searchDetails.query = "query "+ResouceTypeFilter+" resources where (definedTags.namespace = '"+PredefinedTag+"')" if ResouceTypeFilter else "query all resources where (definedTags.namespace = '"+PredefinedTag+"')"
+    searchDetails.query += " && displayName  = '" + DisplayNameFilter + "'" if DisplayNameFilter else ""
+    searchDetails.query += " && compartmentId  = '" + CompartmentFilter + "'" if CompartmentFilter else ""
+    searchDetails.query += " && lifecycleState  = '" + StatusFilter + "'" if StatusFilter else ""
+    
+    # TODO: Handle error "without permission"
+
+    if page == None:
+        response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails)
+    else:
+        response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails, page=page)
+
+    return response
+
+# UI Endpoints (Routes)
 @app.route('/', methods=('GET', 'POST'))
 def index():
     resources = None
@@ -122,7 +141,7 @@ def setResource():
             return render_template('setResource.html', ScheduleKeys=ScheduleKeys, OCID=OCID, ScheduleTags=ScheduleTags, Action=Action)
         
         else:
-            response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=OCID, ScheduleTags=ScheduleTags)
+            response = TagFunctions.tagResource(config=config, signer=signer, PredefinedTag=PredefinedTag, OCID=OCID, ScheduleTags=ScheduleTags)
 
             # Handle response
             if response.status == 200:
@@ -145,7 +164,7 @@ def startResource():
         response = ""
 
         if ResourceType == "Instance":
-            response = StartStopFunctions.startInstance(config=config, OCID=OCID)
+            response = StartStopFunctions.startInstance(config=config, signer=signer, OCID=OCID)
 
         # elif resource_type == "DbSystem":
         #     # TODO
@@ -180,7 +199,7 @@ def stopResource():
         response = ""
 
         if ResourceType == "Instance":
-            response = StartStopFunctions.stopInstance(config=config, OCID=OCID)
+            response = StartStopFunctions.stopInstance(config=config, signer=signer, OCID=OCID)
 
         # elif resource_type == "DbSystem":
         #     # TODO
@@ -203,6 +222,48 @@ def stopResource():
         else:
             flash('Error stopping resource '+OCID+'!!', 'danger')
         return redirect(url_for('index'))
+
+@app.route('/viewMetrics', methods=('GET', 'POST'))
+def viewMetrics():
+    OCID = request.form['OCID']
+    ResourceType = request.form["ResourceType"]
+    CompartmentId = request.form["CompartmentId"]
+
+    # Get monitoring data
+    ## Build metric parameters by Resource Type
+    if ResourceType == "Instance":
+        metric_namespace = "oci_compute_infrastructure_health"
+        metric_name = "instance_status"
+    
+    # elif resource_type == "DbSystem":
+    #     # TODO
+
+    # elif resource_type == "VmCluster":
+    #     # TODO
+
+    # elif resource_type == "AutonomousDatabase":
+    #     # TODO
+
+    # elif resource_type == "InstancePool":
+    #     # TODO
+
+    ## Request OCI API Monitoring Datapoints
+    metric_client = oci.monitoring.MonitoringClient(config=config, signer=signer)
+
+    metric_detail = oci.monitoring.models.SummarizeMetricsDataDetails()
+
+    metric_detail.query = metric_name+'[1h]{resourceId = "'+OCID+'"}.mean()'
+    metric_detail.start_time = "2023-06-09T00:00:00.000Z"
+    metric_detail.end_time = "2023-06-15T00:00:00.000Z"
+    #metric_detail.resolution = "1h"
+    metric_detail.namespace = metric_namespace
+
+    response = metric_client.summarize_metrics_data(compartment_id = CompartmentId, summarize_metrics_data_details=metric_detail)
+
+    labels = "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]"
+    status_data = "[0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0]"
+    schedule_data = "[0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0]"
+    return render_template('viewMetrics.html', labels= labels, status_data=status_data, schedule_data=schedule_data)
 
 @app.route('/exportJSON')
 def exportJSON():
@@ -284,7 +345,7 @@ def importJSON():
             json_object = json.loads(file.read())
             error_count = 0
             for item in json_object['items']:
-                response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=item['identifier'], ScheduleTags=item['defined_tags'][PredefinedTag])
+                response = TagFunctions.tagResource(config=config, signer=signer, PredefinedTag=PredefinedTag, OCID=item['identifier'], ScheduleTags=item['defined_tags'][PredefinedTag])
                 
                 # Handle response
                 if response.status == 200:
@@ -317,7 +378,7 @@ def importCSV():
                 json_ScheduleTags = json_ScheduleTags.replace("\'", "\"")
                 json_ScheduleTags = json.loads(json_ScheduleTags)
 
-                response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=OCID, ScheduleTags=json_ScheduleTags[PredefinedTag])
+                response = TagFunctions.tagResource(config=config, signer=signer, PredefinedTag=PredefinedTag, OCID=OCID, ScheduleTags=json_ScheduleTags[PredefinedTag])
 
                 # Handle response
                 if response.status == 200:
@@ -348,7 +409,7 @@ def importREST():
             error_count = 0
             for item in response["items"]:
                 json_ScheduleTags = json.loads(item["schedule"])
-                response = TagFunctions.tagResource(config=config, PredefinedTag=PredefinedTag, OCID=item["ocid"], ScheduleTags=json_ScheduleTags)
+                response = TagFunctions.tagResource(config=config, signer=signer, PredefinedTag=PredefinedTag, OCID=item["ocid"], ScheduleTags=json_ScheduleTags)
 
                 # Handle response
                 if response.status == 200:
