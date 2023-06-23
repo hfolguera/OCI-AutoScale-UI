@@ -8,10 +8,6 @@ def getInstanceStatusMetrics(config, signer, OCID, CompartmentId, ScheduleTags):
     metric_namespace = "oci_compute_infrastructure_health"
     metric_name = "instance_status"
 
-
-    schedule_data_parameter = [0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0]
-
-
     ## Get current date
     now = datetime.datetime.now(datetime.timezone.utc)
     now = now.replace(minute=0, second=0, microsecond=0)
@@ -58,7 +54,6 @@ def getInstanceStatusMetrics(config, signer, OCID, CompartmentId, ScheduleTags):
 
             schedule_data.append(ScheduleTags['AnyDay'][position])
             position += 2
-            #schedule_data.append(schedule_data_parameter[hour])
 
     monitoring_data = {"labels": labels, "status_data": status_data, "schedule_data": schedule_data}
     
