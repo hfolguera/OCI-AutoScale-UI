@@ -164,13 +164,14 @@ def startResource():
     else:
         OCID = request.form['OCID']
         ResourceType = request.form["ResourceType"]
+        CompartmentId = request.form["CompartmentId"]
         response = ""
 
         if ResourceType == "Instance":
             response = StartStopFunctions.startInstance(config=config, signer=signer, OCID=OCID)
 
-        # elif ResourceType == "DbSystem":
-        #     # TODO
+        elif ResourceType == "DbSystem":
+            response = StartStopFunctions.startDbSystem(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId)
 
         # elif ResourceType == "VmCluster":
         #     # TODO
@@ -199,13 +200,14 @@ def stopResource():
     else:
         OCID = request.form['OCID']
         ResourceType = request.form["ResourceType"]
+        CompartmentId = request.form["CompartmentId"]
         response = ""
 
         if ResourceType == "Instance":
             response = StartStopFunctions.stopInstance(config=config, signer=signer, OCID=OCID)
 
-        # elif ResourceType == "DbSystem":
-        #     # TODO
+        elif ResourceType == "DbSystem":
+            response = StartStopFunctions.stopDbSystem(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId)
 
         # elif ResourceType == "VmCluster":
         #     # TODO

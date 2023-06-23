@@ -22,22 +22,24 @@ def tagResource(config, signer, PredefinedTag, OCID, ScheduleTags):
                 # Tag the OCI resource
                 resource_type = response.data.items[0].resource_type
                 if resource_type == "Instance":
-                        # Tagging Instance resource
-                        changedetails = oci.core.models.UpdateInstanceDetails()
-                        changedetails.defined_tags = new_defined_tags
+                    # Tagging Instance resource
+                    changedetails = oci.core.models.UpdateInstanceDetails()
+                    changedetails.defined_tags = new_defined_tags
 
-                        compute = oci.core.ComputeClient(config=config, signer=signer)
-                        response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
+                    compute = oci.core.ComputeClient(config=config, signer=signer)
+                    response = compute.update_instance(instance_id=OCID, update_instance_details=changedetails)
 
-                        return response                        
-                        # if response.status == 200:
-                        #     flash('Resource '+OCID+' set successfully!', 'success')
-                        # else:
-                        #     flash('Error adding the resource '+OCID+'!', 'danger')
-                        #     return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
+                    return response
                         
-                # elif resource_type == "DbSystem":
-                #     # TODO
+                elif resource_type == "DbSystem":
+                    # Tagging DbSystem
+                    changedetails = oci.database.models.UpdateDbSystemDetails()
+                    changedetails.defined_tags = new_defined_tags
+
+                    database = oci.database.DatabaseClient(config, signer=signer)
+                    response = database.update_db_system(db_system_id=OCID)
+
+                    return response
 
                 # elif resource_type == "VmCluster":
                 #     # TODO

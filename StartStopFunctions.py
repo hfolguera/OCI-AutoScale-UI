@@ -56,3 +56,33 @@ def stopAutonomousDatabase(config, signer, OCID):
             return oci.response.Response(status=500, headers=None, data=None, request=None)
     else:
         return oci.response.Response(status=200, headers=None, data=None, request=None)
+
+def startDbSystem(config, signer, OCID, CompartmentId):
+    database = oci.database.DatabaseClient(config, signer=signer)
+
+    dbnodes = database.list_db_nodes(compartment_id=CompartmentId, db_system_id=OCID).data
+
+    for dbnodedetails in dbnodes:
+        if dbnodedetails.lifecycle_state == "STOPPED":
+            try:
+                response = database.db_node_action(db_node_id=dbnodedetails.id, action="START")
+                return response
+            except oci.exceptions.ServiceError as response:
+                return oci.response.Response(status=500, headers=None, data=None, request=None)
+    else:
+        return oci.response.Response(status=200, headers=None, data=None, request=None)
+
+def stopDbSystem(config, signer, OCID, CompartmentId):
+    database = oci.database.DatabaseClient(config, signer=signer)
+
+    dbnodes = database.list_db_nodes(compartment_id=CompartmentId, db_system_id=OCID).data
+
+    for dbnodedetails in dbnodes:
+        if dbnodedetails.lifecycle_state == "AVAILABLE":
+            try:
+                response = database.db_node_action(db_node_id=dbnodedetails.id, action="STOP")
+                return response
+            except oci.exceptions.ServiceError as response:
+                return oci.response.Response(status=500, headers=None, data=None, request=None)
+    else:
+        return oci.response.Response(status=200, headers=None, data=None, request=None)
