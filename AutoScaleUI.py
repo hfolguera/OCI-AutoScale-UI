@@ -169,23 +169,23 @@ def startResource():
         if ResourceType == "Instance":
             response = StartStopFunctions.startInstance(config=config, signer=signer, OCID=OCID)
 
-        # elif resource_type == "DbSystem":
+        # elif ResourceType == "DbSystem":
         #     # TODO
 
-        # elif resource_type == "VmCluster":
+        # elif ResourceType == "VmCluster":
         #     # TODO
 
-        # elif resource_type == "AutonomousDatabase":
-        #     # TODO
+        elif ResourceType == "AutonomousDatabase":
+            response = StartStopFunctions.startAutonomousDatabase(config=config, signer=signer, OCID=OCID)
 
-        # elif resource_type == "InstancePool":
+        # elif ResourceType == "InstancePool":
         #     # TODO
 
         else:
             # Resource type not supported!
-            flash('Resource type '+resource_type+' not supported!', 'danger')
+            flash('Resource type '+ResourceType+' not supported!', 'danger')
 
-        if response.status_code == 200:
+        if response.status == 200:
             flash('Resource '+OCID+' started!', 'success')
         else:
             flash('Error starting resource '+OCID+'!!', 'danger')
@@ -204,23 +204,23 @@ def stopResource():
         if ResourceType == "Instance":
             response = StartStopFunctions.stopInstance(config=config, signer=signer, OCID=OCID)
 
-        # elif resource_type == "DbSystem":
+        # elif ResourceType == "DbSystem":
         #     # TODO
 
-        # elif resource_type == "VmCluster":
+        # elif ResourceType == "VmCluster":
         #     # TODO
 
-        # elif resource_type == "AutonomousDatabase":
-        #     # TODO
+        elif ResourceType == "AutonomousDatabase":
+            response = StartStopFunctions.stopAutonomousDatabase(config=config, signer=signer, OCID=OCID)
 
-        # elif resource_type == "InstancePool":
+        # elif ResourceType == "InstancePool":
         #     # TODO
 
         else:
             # Resource type not supported!
-            flash('Resource type '+resource_type+' not supported!', 'danger')
+            flash('Resource type '+ResourceType+' not supported!', 'danger')
 
-        if response.status_code == 200:
+        if response.status == 200:
             flash('Resource '+OCID+' stopped!', 'success')
         else:
             flash('Error stopping resource '+OCID+'!!', 'danger')

@@ -103,15 +103,12 @@ Example:
 
 ## Next steps
 Next features to be implemented:
-- Historico
 - Creación de budgets/notifications/...
 - 404
 - Dockerize app
 - Login
 - App versioning
 - Include "Add Schedule" button to dynamically add schedule rows on setResource
-- Compliance view: Show the real state of the resources vs the expected. Include discrepancy summary?
-- Include embeded resources metrics
 - Allow to export current filter or all resources
 - Allow to read log from file or from logging service
 

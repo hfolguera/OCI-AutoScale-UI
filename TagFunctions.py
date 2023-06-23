@@ -42,8 +42,15 @@ def tagResource(config, signer, PredefinedTag, OCID, ScheduleTags):
                 # elif resource_type == "VmCluster":
                 #     # TODO
 
-                # elif resource_type == "AutonomousDatabase":
-                #     # TODO
+                elif resource_type == "AutonomousDatabase":
+                    # Tagging Autonomous resource
+                    changedetails = oci.database.models.UpdateAutonomousDatabaseDetails()
+                    changedetails.defined_tags = new_defined_tags
+
+                    database = oci.database.DatabaseClient(config, signer=signer)
+                    response = database.update_autonomous_database(autonomous_database_id=OCID, update_autonomous_database_details=changedetails)
+
+                    return response
 
                 # elif resource_type == "InstancePool":
                 #     # TODO
@@ -53,7 +60,7 @@ def tagResource(config, signer, PredefinedTag, OCID, ScheduleTags):
                     flash('Resource type '+resource_type+' not supported!', 'danger')
                     # return render_template('setResource.html', ScheduleKeys=ScheduleKeys, Action=Action)
                     # TODO: Return a failed response. How?
-                    return Response(status=500)
+                    return oci.response.Response(status=500, headers=None, data=None, request=None)
             else:
                 flash('Resource '+OCID+' not found!', 'danger')
-                return Response(status=500)
+                return oci.response.Response(status=500, headers=None, data=None, request=None)
