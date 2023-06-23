@@ -117,7 +117,9 @@
                     <td class="align-middle" style="min-width: 100px;">
                         <form method="post">
                             <input type="hidden" name="OCID" value="{{ resource['identifier'] }}">
+                            <input type="hidden" name="DisplayName" value="{{ resource['display_name'] }}">
                             <input type="hidden" name="ResourceType" value="{{ resource['resource_type'] }}">
+                            <input type="hidden" name="CompartmentId" value="{{ resource['compartment_id'] }}">
                             <input type="hidden" name="ScheduleTags" value="{{ resource['defined_tags'][PredefinedTag] }}">
                             <input type="hidden" name="Action" value="Update">
 

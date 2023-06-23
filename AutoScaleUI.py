@@ -8,6 +8,7 @@ from flask import Flask, request, render_template, url_for, flash, redirect, Res
 from prometheus_flask_exporter import PrometheusMetrics
 import StartStopFunctions
 import TagFunctions
+import MonitoringFunctions
 
 # Global variables
 ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -20,6 +21,7 @@ metrics = PrometheusMetrics(app)
 strStartTime = time.strftime("%m/%d/%Y, %H:%M:%S")
 startTime = time.time()
 
+# Load configuration variables from config.py
 PredefinedTag = app.config["PREDEFINED_TAG"]
 AllowStartStopResources = app.config["ALLOW_START_STOP_RESOURCES"]
 
@@ -58,8 +60,6 @@ def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilt
     searchDetails.query += " && displayName  = '" + DisplayNameFilter + "'" if DisplayNameFilter else ""
     searchDetails.query += " && compartmentId  = '" + CompartmentFilter + "'" if CompartmentFilter else ""
     searchDetails.query += " && lifecycleState  = '" + StatusFilter + "'" if StatusFilter else ""
-    
-    # TODO: Handle error "without permission"
 
     if page == None:
         response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails)
@@ -86,6 +86,9 @@ def index():
         # Get Method: Homepage has been called
         # Call OCI to search resources
         resources = getResources()
+
+        if resources.status != 200:
+            flash("ERROR retrieving resource results!", "danger")
 
     else:
         # POST Method
@@ -226,15 +229,19 @@ def stopResource():
 @app.route('/viewMetrics', methods=('GET', 'POST'))
 def viewMetrics():
     OCID = request.form['OCID']
-    ResourceType = request.form["ResourceType"]
-    CompartmentId = request.form["CompartmentId"]
+    DisplayName = request.form['DisplayName']
+    ResourceType = request.form['ResourceType']
+    CompartmentId = request.form['CompartmentId']
+    
+    ScheduleTags = request.form['ScheduleTags']
+    ScheduleTags = ScheduleTags.replace("\'", "\"")
+    ScheduleTags = json.loads(ScheduleTags)
 
     # Get monitoring data
     ## Build metric parameters by Resource Type
     if ResourceType == "Instance":
-        metric_namespace = "oci_compute_infrastructure_health"
-        metric_name = "instance_status"
-    
+        monitoringData = MonitoringFunctions.getInstanceStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
+       
     # elif resource_type == "DbSystem":
     #     # TODO
 
@@ -246,24 +253,13 @@ def viewMetrics():
 
     # elif resource_type == "InstancePool":
     #     # TODO
+    
+    else:
+        # Resource type not supported!
+        flash('Resource type '+ResourceType+' not supported!', 'danger')
+        return redirect(url_for('index'))
 
-    ## Request OCI API Monitoring Datapoints
-    metric_client = oci.monitoring.MonitoringClient(config=config, signer=signer)
-
-    metric_detail = oci.monitoring.models.SummarizeMetricsDataDetails()
-
-    metric_detail.query = metric_name+'[1h]{resourceId = "'+OCID+'"}.mean()'
-    metric_detail.start_time = "2023-06-09T00:00:00.000Z"
-    metric_detail.end_time = "2023-06-15T00:00:00.000Z"
-    #metric_detail.resolution = "1h"
-    metric_detail.namespace = metric_namespace
-
-    response = metric_client.summarize_metrics_data(compartment_id = CompartmentId, summarize_metrics_data_details=metric_detail)
-
-    labels = "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]"
-    status_data = "[0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0]"
-    schedule_data = "[0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0]"
-    return render_template('viewMetrics.html', labels= labels, status_data=status_data, schedule_data=schedule_data)
+    return render_template('viewMetrics.html', OCID=OCID, DisplayName=DisplayName, labels=monitoringData["labels"], status_data=monitoringData["status_data"], schedule_data=monitoringData["schedule_data"])
 
 @app.route('/exportJSON')
 def exportJSON():
