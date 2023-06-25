@@ -250,8 +250,8 @@ def viewMetrics():
     # elif ResourceType == "VmCluster":
     #     # TODO
 
-    # elif ResourceType == "AutonomousDatabase":
-    #     # TODO
+    elif ResourceType == "AutonomousDatabase":
+        monitoringData = MonitoringFunctions.getAutonomousDatabaseStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
 
     # elif ResourceType == "InstancePool":
     #     # TODO
