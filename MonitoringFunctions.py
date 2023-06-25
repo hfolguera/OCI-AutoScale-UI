@@ -57,16 +57,18 @@ def getInstanceStatusMetrics(config, signer, OCID, CompartmentId, ScheduleTags):
 
             # Add resource schedule value (Y-Axis)
             ## Schedule values are added by priority: Day of month > Day of week > WeekDay or WeekEnd > AnyDay
-            if now_iso.day in ScheduleTags and now_iso.day == ScheduleTags[now_iso.day].key():
+            if now_iso.day in ScheduleTags:
                 schedule_data.append(ScheduleTags[now_iso.day][position])
-            elif now_iso.strftime('%A') in ScheduleTags and now_iso.strftime('%A') == ScheduleTags[now_iso.strftime('%A')].key():
+            elif now_iso.strftime('%A') in ScheduleTags:
                 schedule_data.append(ScheduleTags[now_iso.strftime('%A')][position])
             elif 'WeekDay' in ScheduleTags and now_iso.weeday() < 5:
                 schedule_data.append(ScheduleTags['WeekDay'][position])
             elif 'WeekEnd' in ScheduleTags and now_iso.weekday() > 4:
                 schedule_data.append(ScheduleTags['WeekEnd'][position])
+            elif 'AnyDay' in ScheduleTags:
+                schedule_data.append(ScheduleTags['AnyDay'][position])
             else:
-                 schedule_data.append(ScheduleTags['AnyDay'][position])
+                schedule_data.append('*')
 
             position += 2
 
@@ -126,16 +128,18 @@ def getDbSystemStatusMetrics(config, signer, OCID, CompartmentId, ScheduleTags):
 
             # Add resource schedule value (Y-Axis)
             ## Schedule values are added by priority: Day of month > Day of week > WeekDay or WeekEnd > AnyDay
-            if now_iso.day in ScheduleTags and now_iso.day == ScheduleTags[now_iso.day].key():
+            if now_iso.day in ScheduleTags:
                 schedule_data.append(ScheduleTags[now_iso.day][position])
-            elif now_iso.strftime('%A') in ScheduleTags and now_iso.strftime('%A') == ScheduleTags[now_iso.strftime('%A')].key():
+            elif now_iso.strftime('%A') in ScheduleTags:
                 schedule_data.append(ScheduleTags[now_iso.strftime('%A')][position])
             elif 'WeekDay' in ScheduleTags and now_iso.weeday() < 5:
                 schedule_data.append(ScheduleTags['WeekDay'][position])
             elif 'WeekEnd' in ScheduleTags and now_iso.weekday() > 4:
                 schedule_data.append(ScheduleTags['WeekEnd'][position])
+            elif 'AnyDay' in ScheduleTags:
+                schedule_data.append(ScheduleTags['AnyDay'][position])
             else:
-                 schedule_data.append(ScheduleTags['AnyDay'][position])
+                schedule_data.append('*')
                  
             position += 2
 
@@ -194,16 +198,18 @@ def getAutonomousDatabaseStatusMetrics(config, signer, OCID, CompartmentId, Sche
 
             # Add resource schedule value (Y-Axis)
             ## Schedule values are added by priority: Day of month > Day of week > WeekDay or WeekEnd > AnyDay
-            if now_iso.day in ScheduleTags and now_iso.day == ScheduleTags[now_iso.day].key():
+            if now_iso.day in ScheduleTags:
                 schedule_data.append(ScheduleTags[now_iso.day][position])
-            elif now_iso.strftime('%A') in ScheduleTags and now_iso.strftime('%A') == ScheduleTags[now_iso.strftime('%A')].key():
+            elif now_iso.strftime('%A') in ScheduleTags:
                 schedule_data.append(ScheduleTags[now_iso.strftime('%A')][position])
             elif 'WeekDay' in ScheduleTags and now_iso.weeday() < 5:
                 schedule_data.append(ScheduleTags['WeekDay'][position])
             elif 'WeekEnd' in ScheduleTags and now_iso.weekday() > 4:
                 schedule_data.append(ScheduleTags['WeekEnd'][position])
+            elif 'AnyDay' in ScheduleTags:
+                schedule_data.append(ScheduleTags['AnyDay'][position])
             else:
-                 schedule_data.append(ScheduleTags['AnyDay'][position])
+                schedule_data.append('*')
                  
             position += 2
 
