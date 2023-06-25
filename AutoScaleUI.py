@@ -244,8 +244,8 @@ def viewMetrics():
     if ResourceType == "Instance":
         monitoringData = MonitoringFunctions.getInstanceStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
        
-    # elif resource_type == "DbSystem":
-    #     # TODO
+    elif resource_type == "DbSystem":
+        monitoringData = MonitoringFunctions.getDbSystemStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
 
     # elif resource_type == "VmCluster":
     #     # TODO
