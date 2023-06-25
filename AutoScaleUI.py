@@ -244,16 +244,16 @@ def viewMetrics():
     if ResourceType == "Instance":
         monitoringData = MonitoringFunctions.getInstanceStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
        
-    elif resource_type == "DbSystem":
+    elif ResourceType == "DbSystem":
         monitoringData = MonitoringFunctions.getDbSystemStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
 
-    # elif resource_type == "VmCluster":
+    # elif ResourceType == "VmCluster":
     #     # TODO
 
-    # elif resource_type == "AutonomousDatabase":
+    # elif ResourceType == "AutonomousDatabase":
     #     # TODO
 
-    # elif resource_type == "InstancePool":
+    # elif ResourceType == "InstancePool":
     #     # TODO
     
     else:
