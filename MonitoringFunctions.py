@@ -38,7 +38,14 @@ def getStatusMetrics(config, signer, OCID, ResourceType, CompartmentId, Schedule
     metric_detail.namespace = metric_namespace
 
     response = metric_client.summarize_metrics_data(compartment_id = CompartmentId, summarize_metrics_data_details=metric_detail)
-    metric_data = response.data[0].aggregated_datapoints
+     if len(response.data) > 0:
+        metric_data = response.data[0].aggregated_datapoints
+    else:
+        # If selected TimeRange does not have DataPoints, assume resource is stopped
+        data_point = oci.monitoring.models.AggregatedDatapoint()
+        data_point.timestamp = now
+        data_point.value = 0.0
+        metric_data = [data_point]
 
     labels = []
     status_data = []
