@@ -38,7 +38,7 @@ def getStatusMetrics(config, signer, OCID, ResourceType, CompartmentId, Schedule
     metric_detail.namespace = metric_namespace
 
     response = metric_client.summarize_metrics_data(compartment_id = CompartmentId, summarize_metrics_data_details=metric_detail)
-     if len(response.data) > 0:
+    if len(response.data) > 0:
         metric_data = response.data[0].aggregated_datapoints
     else:
         # If selected TimeRange does not have DataPoints, assume resource is stopped
