@@ -239,29 +239,21 @@ def viewMetrics():
     ScheduleTags = ScheduleTags.replace("\'", "\"")
     ScheduleTags = json.loads(ScheduleTags)
 
-    # Get monitoring data
-    ## Build metric parameters by Resource Type
-    if ResourceType == "Instance":
-        monitoringData = MonitoringFunctions.getInstanceStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
-       
-    elif ResourceType == "DbSystem":
-        monitoringData = MonitoringFunctions.getDbSystemStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
-
-    # elif ResourceType == "VmCluster":
-    #     # TODO
-
-    elif ResourceType == "AutonomousDatabase":
-        monitoringData = MonitoringFunctions.getAutonomousDatabaseStatusMetrics(config=config, signer=signer, OCID=OCID, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags)
-
-    # elif ResourceType == "InstancePool":
-    #     # TODO
-    
+    if 'TimeRange' in request.form:
+        TimeRange = int(request.form['TimeRange'])
     else:
+        TimeRange = 7
+
+    # Get monitoring data
+    monitoringData = MonitoringFunctions.getStatusMetrics(config=config, signer=signer, OCID=OCID, ResourceType=ResourceType, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags, TimeRange=TimeRange)
+
+    ## Build metric parameters by Resource Type
+    if monitoringData == None:
         # Resource type not supported!
         flash('Resource type '+ResourceType+' not supported!', 'danger')
         return redirect(url_for('index'))
-
-    return render_template('viewMetrics.html', OCID=OCID, DisplayName=DisplayName, labels=monitoringData["labels"], status_data=monitoringData["status_data"], schedule_data=monitoringData["schedule_data"])
+    
+    return render_template('viewMetrics.html', OCID=OCID, DisplayName=DisplayName, ResourceType=ResourceType, CompartmentId=CompartmentId, ScheduleTags=ScheduleTags, TimeRange=TimeRange, labels=monitoringData["labels"], status_data=monitoringData["status_data"], schedule_data=monitoringData["schedule_data"])
 
 @app.route('/exportJSON')
 def exportJSON():
