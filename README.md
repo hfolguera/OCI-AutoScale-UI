@@ -38,6 +38,13 @@ sudo pip3 install --no-index --find-links <destination folder> -r requirements.t
 ### Docker
 #TODO
 
+### Firewall configuration
+If firewalld service is running, add an exception for port 5000 (default) to allow requests:
+```
+sudo firewall-cmd --zone=public --add-port=5000/tcp --permanent
+sudo firewall-cmd --reload
+```
+
 ## Configuration
 #TODO: Explain configuration file and parameters purpose
 
