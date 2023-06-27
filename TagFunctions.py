@@ -37,7 +37,7 @@ def tagResource(config, signer, PredefinedTag, OCID, ScheduleTags):
                     changedetails.defined_tags = new_defined_tags
 
                     database = oci.database.DatabaseClient(config, signer=signer)
-                    response = database.update_db_system(db_system_id=OCID)
+                    response = database.update_db_system(db_system_id=OCID, update_db_system_details=changedetails)
 
                     return response
 
