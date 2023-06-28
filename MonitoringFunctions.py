@@ -73,16 +73,22 @@ def getStatusMetrics(config, signer, OCID, ResourceType, CompartmentId, Schedule
 
             # Add resource schedule value (Y-Axis)
             ## Schedule values are added by priority: Day of month > Day of week > WeekDay or WeekEnd > AnyDay
+            schedule_hour = (now_iso.hour)+2 # Add 2h for timezome
+            if schedule_hour == 24:
+                schedule_hour = 0
+            elif schedule_hour == 25:
+                schedule_hour = 1
+
             if now_iso.day in ScheduleTags:
-                schedule_data.append(ScheduleTags[now_iso.day][now_iso.hour*2])
+                schedule_data.append(ScheduleTags[now_iso.day][schedule_hour*2])
             elif now_iso.strftime('%A') in ScheduleTags:
-                schedule_data.append(ScheduleTags[now_iso.strftime('%A')][now_iso.hour*2])
+                schedule_data.append(ScheduleTags[now_iso.strftime('%A')][schedule_hour*2])
             elif 'WeekDay' in ScheduleTags and now_iso.weekday() < 5:
-                schedule_data.append(ScheduleTags['WeekDay'][now_iso.hour*2])
+                schedule_data.append(ScheduleTags['WeekDay'][schedule_hour*2])
             elif 'WeekEnd' in ScheduleTags and now_iso.weekday() > 4:
-                schedule_data.append(ScheduleTags['WeekEnd'][now_iso.hour*2])
+                schedule_data.append(ScheduleTags['WeekEnd'][schedule_hour*2])
             elif 'AnyDay' in ScheduleTags:
-                schedule_data.append(ScheduleTags['AnyDay'][now_iso.hour*2])
+                schedule_data.append(ScheduleTags['AnyDay'][schedule_hour*2])
             else:
                 schedule_data.append('*')
 
