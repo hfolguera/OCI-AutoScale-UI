@@ -52,9 +52,8 @@ def getStatusMetrics(config, signer, OCID, ResourceType, CompartmentId, Schedule
     schedule_data = []
     ## Build Dataframe
     for day in range(TimeRange):
-        position = 0
         for hour in range(24):
-            now_iso = start_time + datetime.timedelta(days=day, hours=hour)
+            now_iso = start_time + datetime.timedelta(days=day, hours=hour+1)
 
             # Add label (X-Axis)
             labels.append(now_iso.isoformat())
@@ -75,19 +74,17 @@ def getStatusMetrics(config, signer, OCID, ResourceType, CompartmentId, Schedule
             # Add resource schedule value (Y-Axis)
             ## Schedule values are added by priority: Day of month > Day of week > WeekDay or WeekEnd > AnyDay
             if now_iso.day in ScheduleTags:
-                schedule_data.append(ScheduleTags[now_iso.day][position])
+                schedule_data.append(ScheduleTags[now_iso.day][now_iso.hour*2])
             elif now_iso.strftime('%A') in ScheduleTags:
-                schedule_data.append(ScheduleTags[now_iso.strftime('%A')][position])
-            elif 'WeekDay' in ScheduleTags and now_iso.weeday() < 5:
-                schedule_data.append(ScheduleTags['WeekDay'][position])
+                schedule_data.append(ScheduleTags[now_iso.strftime('%A')][now_iso.hour*2])
+            elif 'WeekDay' in ScheduleTags and now_iso.weekday() < 5:
+                schedule_data.append(ScheduleTags['WeekDay'][now_iso.hour*2])
             elif 'WeekEnd' in ScheduleTags and now_iso.weekday() > 4:
-                schedule_data.append(ScheduleTags['WeekEnd'][position])
+                schedule_data.append(ScheduleTags['WeekEnd'][now_iso.hour*2])
             elif 'AnyDay' in ScheduleTags:
-                schedule_data.append(ScheduleTags['AnyDay'][position])
+                schedule_data.append(ScheduleTags['AnyDay'][now_iso.hour*2])
             else:
                 schedule_data.append('*')
-                 
-            position += 2
 
     monitoring_data = {"labels": labels, "status_data": status_data, "schedule_data": schedule_data}
     
