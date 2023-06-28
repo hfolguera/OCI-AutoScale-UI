@@ -22,7 +22,7 @@ def stopInstance(config, signer, OCID):
 
     if resourceDetails.lifecycle_state != "STOPPED":
         try:
-            response = compute.instance_action(instance_id=OCID, action=ComputeShutdownMethod)
+            response = compute.instance_action(instance_id=OCID, action="SOFTSTOP")
             return response
         except oci.exceptions.ServiceError as response:
             return oci.response.Response(status=500, headers=None, data=None, request=None)
