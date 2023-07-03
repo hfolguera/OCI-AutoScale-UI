@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 from flask import Flask, request, render_template, url_for, flash, redirect, Response
 from prometheus_flask_exporter import PrometheusMetrics
+# import logging
 import StartStopFunctions
 import TagFunctions
 import MonitoringFunctions
@@ -15,6 +16,11 @@ ScheduleKeys = ['AnyDay', 'WeekDay', 'WeekEnd', 'Monday', 'Tuesday', 'Wednesday'
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
+
+# # Configure app logging
+# logger = logging.getLogger('werkzeug') # grabs underlying WSGI logger
+# handler = logging.FileHandler('log/OCI-AutoScale-UI.log') # creates handler for the log file
+# logger.addHandler(handler) # adds handler to the werkzeug WSGI logger
 
 metrics = PrometheusMetrics(app)
 
@@ -66,7 +72,14 @@ def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilt
     else:
         response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails, page=page)
 
-    return response
+    # Add compartment name
+    identity_client = oci.identity.IdentityClient(config=config,signer=signer)
+    compartments = []
+    for resource in response.data:
+        compartment_name = identity_client.get_compartment(compartment_id=resource.compartment_id)
+        compartments.append(compartment_name.data.name)
+    
+    return response, compartments
 
 # UI Endpoints (Routes)
 @app.route('/', methods=('GET', 'POST'))
@@ -85,7 +98,7 @@ def index():
     if request.method == 'GET':
         # Get Method: Homepage has been called
         # Call OCI to search resources
-        resources = getResources()
+        resources, compartments = getResources()
 
         if resources.status != 200:
             flash("ERROR retrieving resource results!", "danger")
@@ -109,7 +122,7 @@ def index():
             per_page = request.form['per_page']
 
         # Call OCI to search resources
-        resources = getResources(page=page, per_page=per_page, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
+        resources, compartments = getResources(page=page, per_page=per_page, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
 
     ## Pagination parameters
     if 'opc-next-page' in resources.headers:
@@ -118,7 +131,7 @@ def index():
     if 'opc-previous-page' in resources.headers:
         previous_page_token = resources.headers['opc-previous-page']
 
-    return render_template('index.html', resources=resources.data, PredefinedTag=PredefinedTag, next_page_token=next_page_token, per_page=per_page, previous_page_token=previous_page_token, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
+    return render_template('index.html', resources=resources.data, compartments=compartments, PredefinedTag=PredefinedTag, next_page_token=next_page_token, per_page=per_page, previous_page_token=previous_page_token, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
 
 @app.route('/setResource', methods=('GET', 'POST'))
 def setResource():
@@ -257,7 +270,7 @@ def viewMetrics():
 
 @app.route('/exportJSON')
 def exportJSON():
-    resources = getResources(per_page='All')
+    resources, compartments = getResources(per_page='All')
 
     items = []
     for item in resources.data:
@@ -279,7 +292,7 @@ def exportJSON():
 
 @app.route('/exportCSV')
 def exportCSV():
-    resources = getResources(per_page='All')
+    resources, compartments = getResources(per_page='All')
 
     csv_data = "display_name; identifier; compartment_id; defined_tags; lifecycle_state\n"
     for item in resources.data:
@@ -294,7 +307,7 @@ def exportREST():
             URL = request.form["URL"]
 
             # Get the resources
-            resources = getResources(per_page='All')
+            resources, compartments = getResources(per_page='All')
 
             error_count = 0
             for item in resources.data:
@@ -439,7 +452,7 @@ def health():
 
     # Validate OCI connectivity
     try:
-        res = getResources(per_page=1)
+        res, compartments = getResources(per_page=1)
         
         content['status']='OK'
         content['status_code']='200'

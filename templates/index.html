@@ -90,7 +90,7 @@
                 <tr>
                     <th class="align-middle text-left" ><span class="d-inline-block text-truncate" style="min-width: 200px;">{{ resource['display_name'] }}   {% set ocid = resource['identifier'] %} <button type="submit" class="btn p-0" onclick="copyContent('{{ ocid }}')"><i class="bi bi-clipboard"></i></button></span></th>
                     <td class="align-middle" >{{ resource['resource_type'] }}</td>
-                    <td class="align-middle" ><span class="d-inline-block text-truncate" style="max-width: 150px;">{{ resource['compartment_id'] }}</span> {% set comp_ocid = resource['compartment_id'] %} <button type="submit" class="btn p-0" onclick="copyContent('{{ comp_ocid }}')"><i class="bi bi-clipboard"></i></button></td>
+                    <td class="align-middle" >{{ compartments[loop.index-1] }}{% set comp_ocid = resource['compartment_id'] %}<button type="submit" class="btn p-0" onclick="copyContent('{{ comp_ocid }}')"><i class="bi bi-clipboard"></i></td>
                     <td class="align-middle" ><span class="d-inline-block text-truncate" style="min-width: 700px;">
                             {% for key in resource['defined_tags'][PredefinedTag].keys() %}
                                 <div class="input-group">
