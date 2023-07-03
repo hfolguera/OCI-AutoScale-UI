@@ -110,8 +110,6 @@ Example:
 
 ## Next steps
 Next features to be implemented:
-- Creación de budgets/notifications/...
-- 404
 - Dockerize app
 - Login
 - App versioning
@@ -124,3 +122,4 @@ Known issues to be fixed:
 - Fix pagination: Empty last page, disable previous on first page (after going forward)
 - Fix: Keep pagination (per_page) parameter when filter is used
 - Fix: Metrics are disabled when run in the Flask development server with reload enabled. ...them anyway
+- When an schedule is added to an existing resource, previous tags are removed

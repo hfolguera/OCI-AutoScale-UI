@@ -44,12 +44,12 @@ else:
     oci.config.validate_config(config)
     
     signer = oci.signer.Signer(
-        tenancy=config["tenancy"],
-        user=config["user"],
-        fingerprint=config["fingerprint"],
-        private_key_file_location=config.get("key_file"),
-        pass_phrase=oci.config.get_config_value_or_default(config, "pass_phrase"),
-        private_key_content=config.get("key_content")
+        tenancy = config["tenancy"],
+        user = config["user"],
+        fingerprint = config["fingerprint"],
+        private_key_file_location = config.get("key_file"),
+        pass_phrase = oci.config.get_config_value_or_default(config, "pass_phrase"),
+        private_key_content = config.get("key_content")
     )
 
 # Global functions
@@ -72,14 +72,37 @@ def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilt
     else:
         response = oci.pagination.list_call_get_up_to_limit(search_client.search_resources,int(per_page),int(limit),searchDetails, page=page)
 
-    # Add compartment name
+    # Add additional info
+    ## Function will return a list (compartments) with the name of the compartments for each resource
+    ## Also, function will return a list of dictionaries (additional_info) with additional info about resources (i.ex. for DbSystems, will return the status of the nodes)
+    ##
+    ## Both lists will have the same length of resources which will ease the access to each row
+    ##
     identity_client = oci.identity.IdentityClient(config=config,signer=signer)
-    compartments = []
+    database = oci.database.DatabaseClient(config, signer=signer)
+    additional_info = []
     for resource in response.data:
+        item = {}
+        # Add compartment name
         compartment_name = identity_client.get_compartment(compartment_id=resource.compartment_id)
-        compartments.append(compartment_name.data.name)
+        item['compartment_name'] = compartment_name.data.name
+
+        # Add additional info for special resources
+        if resource.resource_type == 'DbSystem':
+            dbnodes = database.list_db_nodes(compartment_id=resource.compartment_id, db_system_id=resource.identifier).data
+            
+            stopped_nodes = 0
+            for dbnodedetails in dbnodes:
+                if dbnodedetails.lifecycle_state == "STOPPED":
+                    stopped_nodes += 1
+            
+            item["total_nodes"] = dbnodes.length()
+            item["stopped_nodes"] = stopped_nodes
+            item["running_nodes"] = dbnodes.length() - stopped_nodes
+
+        additional_info.append(item)
     
-    return response, compartments
+    return response, additional_info
 
 # UI Endpoints (Routes)
 @app.route('/', methods=('GET', 'POST'))
@@ -98,7 +121,7 @@ def index():
     if request.method == 'GET':
         # Get Method: Homepage has been called
         # Call OCI to search resources
-        resources, compartments = getResources()
+        resources, additional_info = getResources()
 
         if resources.status != 200:
             flash("ERROR retrieving resource results!", "danger")
@@ -122,7 +145,7 @@ def index():
             per_page = request.form['per_page']
 
         # Call OCI to search resources
-        resources, compartments = getResources(page=page, per_page=per_page, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
+        resources, additional_info = getResources(page=page, per_page=per_page, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
 
     ## Pagination parameters
     if 'opc-next-page' in resources.headers:
@@ -131,7 +154,7 @@ def index():
     if 'opc-previous-page' in resources.headers:
         previous_page_token = resources.headers['opc-previous-page']
 
-    return render_template('index.html', resources=resources.data, compartments=compartments, PredefinedTag=PredefinedTag, next_page_token=next_page_token, per_page=per_page, previous_page_token=previous_page_token, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
+    return render_template('index.html', resources=resources.data, additional_info=additional_info, PredefinedTag=PredefinedTag, next_page_token=next_page_token, per_page=per_page, previous_page_token=previous_page_token, DisplayNameFilter=DisplayNameFilter, ResouceTypeFilter=ResouceTypeFilter, CompartmentFilter=CompartmentFilter, StatusFilter=StatusFilter)
 
 @app.route('/setResource', methods=('GET', 'POST'))
 def setResource():
@@ -270,7 +293,7 @@ def viewMetrics():
 
 @app.route('/exportJSON')
 def exportJSON():
-    resources, compartments = getResources(per_page='All')
+    resources, additional_info = getResources(per_page='All')
 
     items = []
     for item in resources.data:
@@ -292,7 +315,7 @@ def exportJSON():
 
 @app.route('/exportCSV')
 def exportCSV():
-    resources, compartments = getResources(per_page='All')
+    resources, additional_info = getResources(per_page='All')
 
     csv_data = "display_name; identifier; compartment_id; defined_tags; lifecycle_state\n"
     for item in resources.data:
@@ -307,7 +330,7 @@ def exportREST():
             URL = request.form["URL"]
 
             # Get the resources
-            resources, compartments = getResources(per_page='All')
+            resources, additional_info = getResources(per_page='All')
 
             error_count = 0
             for item in resources.data:
@@ -452,7 +475,7 @@ def health():
 
     # Validate OCI connectivity
     try:
-        res, compartments = getResources(per_page=1)
+        res, additional_info = getResources(per_page=1)
         
         content['status']='OK'
         content['status_code']='200'
