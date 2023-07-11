@@ -92,13 +92,15 @@ def getResources(page=None, per_page='10', DisplayNameFilter="", ResouceTypeFilt
             dbnodes = database.list_db_nodes(compartment_id=resource.compartment_id, db_system_id=resource.identifier).data
             
             stopped_nodes = 0
+            total_nodes = 0
             for dbnodedetails in dbnodes:
+                total_nodes += 1
                 if dbnodedetails.lifecycle_state == "STOPPED":
                     stopped_nodes += 1
-            
-            item["total_nodes"] = dbnodes.length()
+
+            item["total_nodes"] = total_nodes
             item["stopped_nodes"] = stopped_nodes
-            item["running_nodes"] = dbnodes.length() - stopped_nodes
+            item["running_nodes"] = total_nodes - stopped_nodes
 
         additional_info.append(item)
     
