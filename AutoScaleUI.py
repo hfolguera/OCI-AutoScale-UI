@@ -435,6 +435,7 @@ def importREST():
 
             # Configure resources
             error_count = 0
+            rest_resources = []
             for item in response["items"]:
                 json_ScheduleTags = json.loads(item["schedule"])
                 response = TagFunctions.tagResource(config=config, signer=signer, PredefinedTag=PredefinedTag, OCID=item["ocid"], ScheduleTags=json_ScheduleTags)
@@ -445,6 +446,23 @@ def importREST():
                 else:
                     flash('Error adding the resource '+item["ocid"]+'!', 'danger')
                     error_count+=1
+
+                # Build a resource list. This will be used later to check which resources has been configured and which resources will be deleted.
+                rest_resources.append(item['ocid'])
+
+            if request.form.get("remove_other_entries") != None:
+                # Remove other resources checkbox is checked!
+                resources, additional_info = getResources(per_page='All')
+
+                for resource in resources.data:
+                    if resource.identifier not in rest_resources:
+                        response = TagFunctions.tagResource(config=config, signer=signer, PredefinedTag=PredefinedTag, OCID=resource.identifier, ScheduleTags={})
+
+                        if response.status == 200:
+                            flash('Resource '+resource.identifier+' deleted successfully!', 'success')
+                        else:
+                            flash('Error adding the resource '+resource.identifier+'!', 'danger')
+                            error_count+=1
 
             if error_count == 0:
                 flash('REST resources imported successfully!!', 'success')
